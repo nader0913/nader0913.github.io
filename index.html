@@ -587,7 +587,7 @@
           document.getElementById('markdown-output').innerHTML = parseMarkdown(md);
           document.getElementById('article-chapter').innerText = post.chapter;
           document.getElementById('article-title').innerText = post.title;
-          document.getElementById('article-date').innerText = "last updated: " + (post.date || '');
+          document.getElementById('article-date').innerText = (post.date || '');
           window.scrollTo(0, 0);
 
           // Typeset MathJax after content is loaded
