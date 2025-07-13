@@ -19,39 +19,18 @@
   <meta charset="UTF-8">
   <title>Nader Blog</title>
   <style>
-    :root {
-      --max-content-width: 600px;
-      --mobile-breakpoint: 768px;
-      --font-size-base: 1rem;
-      --font-size-small: 0.9rem;
-      --font-size-smaller: 0.8rem;
-      --line-height: 1.5;
-      --color-text: #333;
-      --color-text-light: #666;
-      --color-text-lighter: #888;
-      --color-link: #444;
-      --color-link-hover: #222;
-      --color-border: #ccc;
-      --color-bg-light: #f9f9f9;
-      --color-bg-highlight: #f0f7ff;
-      --spacing-small: 0.5em;
-      --spacing-medium: 1em;
-      --spacing-large: 1.5em;
-    }
-
     @import url('https://fonts.googleapis.com/css2?family=Amiri&display=swap');
 
     body {
       font-family: Arial, sans-serif;
-      max-width: var(--max-content-width);
+      max-width: 600px;
       margin: 10px auto;
       padding: 0 20px;
-      min-height: 98vh;
-      max-width: 600px;
       height: 100%;
       display: flex;
       flex-direction: column;
     }
+
 
     html {
       height: 100%;
@@ -62,6 +41,7 @@
     #main-page {
       display: flex;
       flex-direction: column;
+      width: 600px;
       margin-top: 2em;
     }
 
@@ -329,7 +309,6 @@
 
     /* wrapper scroll styling */
     .table-wrapper {
-      -webkit-overflow-scrolling: touch;
       position: relative;
       overflow-x: auto;
       max-width: 100%;
@@ -367,44 +346,23 @@
     @media (max-width: 768px) {
       body {
         max-width: 100%;
+        padding: 0 15px;
       }
 
-      h1 {
-        font-size: 1.1em;
-      }
-
-      h2 {
-        font-size: 1em;
-      }
-
-      h3 {
-        font-size: 0.9em;
-      }
-
-      #markdown-output p {
-        margin: 0.8em 0;
+      #main-page {
+        width: 100%;
       }
     }
 
-    @media (max-width: 480px) {
-      body {
-        max-width: 100%;
+    @media (max-width: 768px) {
+      #markdown-output table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
       }
 
-      h1 {
-        font-size: 1em;
-      }
-
-      h2 {
-        font-size: 0.9em;
-      }
-
-      h3 {
-        font-size: 0.8em;
-      }
-
-      #markdown-output p {
-        margin: 0.8em 0;
+      .table-wrapper::after {
+        width: 2rem;
       }
     }
   </style>
