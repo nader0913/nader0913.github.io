@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <!-- Markdown parser (GitHub-Flavored) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Mermaid diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+  <!-- Polyfill for MathJax -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+
+  <!-- MathJax for LaTeX support -->
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+  <meta charset="UTF-8">
+  <title>Nader Blog</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Amiri&display=swap');
+
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 10px auto;
+      padding: 0 20px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    html {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #main-page {
+      display: flex;
+      flex-direction: column;
+      width: 600px;
+      margin-top: 2em;
+    }
+
+    #main-footer {
+      text-align: center;
+      font-size: 0.8em;
+      color: #888;
+      padding: 1em 0 0.5em;
+      margin-top: auto;
+    }
+
+    #main-title {
+      text-align: center;
+      margin-bottom: 1.5em;
+    }
+
+    #main-title h1 {
+      font-size: 1.6em;
+      margin-bottom: 0.2em;
+    }
+
+    .post-title {
+      display: block;
+      font-size: 1.05em;
+      text-decoration: none;
+      color: #000;
+      margin-bottom: 0.5em;
+    }
+
+    .post-title:hover {
+      text-decoration: underline;
+      color: #444;
+    }
+
+    #post-content {
+      text-align: justify;
+      display: none;
+    }
+
+    .nav-links,
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1.2em 0;
+      padding: 0;
+      position: relative;
+    }
+
+    .back-link {
+      color: #444;
+      text-decoration: none;
+      font-size: 0.9em;
+    }
+
+    .article-chapter {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1em;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .article-title {
+      font-size: 1.5em;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .article-divider {
+      border: none;
+      height: 1px;
+      background-color: #ccc;
+      margin: 1.5em 0;
+      opacity: 0.6;
+    }
+
+    .article-date {
+      font-size: 0.8em;
+      color: #888;
+      text-align: right;
+    }
+
+    .nav-links a {
+      color: #444;
+      text-decoration: none;
+    }
+
+    a {
+      color: #444;
+      text-decoration: underline;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+      margin: 14px auto;
+      border-radius: 4px;
+    }
+
+    h1 {
+      font-size: 1.2em;
+      margin-top: 0.6em;
+      margin-bottom: 0.5em;
+      color: #444;
+    }
+
+    h2 {
+      font-size: 1.05em;
+      margin-top: 0.5em;
+      margin-bottom: 0.4em;
+      color: #444;
+    }
+
+    h3 {
+      font-size: 0.95em;
+      margin-top: 0.4em;
+      margin-bottom: 0.3em;
+      color: #444;
+    }
+
+    #markdown-output h1:first-child {
+      margin-top: 0;
+    }
+
+    #markdown-output p {
+      margin: 1em 0;
+    }
+
+    blockquote {
+      background-color: #f9f9f9;
+      color: #444;
+      padding: 1em;
+      margin: 1em 0;
+      border-left: 5px solid #ccc;
+    }
+
+    .toc-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      cursor: pointer;
+      font-size: 1.05em;
+      margin-bottom: 0.6em;
+      color: #000;
+      text-decoration: none;
+      padding-bottom: 0.3em;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .toc-entry:hover {
+      color: #555;
+      text-decoration: underline;
+    }
+
+    .toc-title {
+      flex: 0 1 auto;
+    }
+
+    .toc-dots {
+      flex: 1 1 auto;
+      border-bottom: 2px dotted #ccc;
+      margin: 0 0.5em;
+      height: 0.6em;
+    }
+
+    .toc-chapter {
+      flex: 0 0 auto;
+      font-size: 0.85em;
+      color: #666;
+    }
+
+    /* Enhanced Image block style */
+    .image-block {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .image-block img {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+
+    .image-caption {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* Enhanced Formula block style */
+    .formula-block {
+      text-align: center;
+      margin: 25px 0;
+      padding: 15px;
+      background-color: #f0f7ff;
+      border-radius: 4px;
+    }
+
+    .formula-label {
+      font-size: 0.9em;
+      color: #666;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    /* MathJax styles */
+    .MathJax {
+      font-size: 1.1em;
+      padding: 10px 0;
+    }
+
+    .math-display {
+      display: block;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    /* Center math formulas */
+    .MathJax_Display {
+      text-align: center;
+      margin: 1em 0;
+    }
+
+    /* support GFM tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1em 0;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid #ccc;
+    }
+
+    th,
+    td {
+      padding: 0.6em;
+      text-align: left;
+    }
+
+    #markdown-output table {
+      display: block;
+      /* so overflow applies to the table itself */
+      max-width: 100%;
+      /* never exceed the container width */
+      overflow-x: auto;
+      /* show a scrollbar only if the content overflows */
+    }
+
+    #markdown-output th,
+    #markdown-output td {
+      white-space: nowrap;
+      /* keep each cell on one line, forcing a scroll when it’s too wide */
+    }
+
+    /* wrapper scroll styling */
+    .table-wrapper {
+      position: relative;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    /* fade hint on the right edge */
+    .table-wrapper::after {
+      content: '';
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 3rem;
+      height: 100%;
+      background: linear-gradient(to left, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+    }
+
+    /* optional “⇆ Scroll” label in corner */
+    .table-wrapper::before {
+      content: '⇆';
+      position: absolute;
+      right: 0.5rem;
+      bottom: 0.3rem;
+      font-size: 0.9rem;
+      color: #888;
+      pointer-events: none;
+    }
+
+    /* keep the table itself unchanged */
+    .table-wrapper table {
+      display: block;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="main-title">
+    <h1>Nader Blog</h1>
+  </div>
+
+  <div id="main-page">
+  </div>
+
+  <div id="post-content">
+    <div class="top-nav">
+      <a href="#" class="back-link" onclick="goBack()">&larr; Back</a>
+      <div class="article-chapter" id="article-chapter"></div>
+      <div class="article-date" id="article-date"></div>
+    </div>
+    <div class="article-title" id="article-title"></div>
+    <hr class="article-divider">
+    <div id="markdown-output" style="margin-top: 0.5em;"></div>
+    <hr class="article-divider">
+    <div class="nav-links">
+      <a href="#" onclick="prevPost()">&larr; Previous</a>
+      <a href="#" onclick="nextPost()">Next &rarr;</a>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: false });
+
+    const posts = [
+      { file: 'pareto-distribution.md', title: 'Pareto Distribution and Wealth Disparity', slug: 'pareto-distribution', chapter: 'Distributions', date: 'Jul 23, 2021' },
+      { file: 'baader-meinhof-phenomenon.md', title: 'Baader Meinhof Phenomenon', slug: 'baader-meinhof-phenomenon', chapter: 'Phenomenons', date: '10 Dec, 2023' },
+      { file: 'goldilocks-rule-and-flow-state.md', title: 'Goldilocks Rule and Flow State', slug: 'goldilocks-rule-and-flow-state', chapter: 'Phenomenons', date: '24 Nov, 2024' },
+      { file: 'homomorphic-encryption.md', title: 'Homomorphic Encryption for Dummies', slug: 'homomorphic-encryption', chapter: 'Programming', date: 'Nov 12, 2023' },
+      { file: 'shamir-secret-sharing.md', title: 'Shamir Secret Sharing', slug: 'shamir-secret-sharing', chapter: 'Programming', date: 'Nov 12, 2023' },
+    ];
+
+    function renderMainPage() {
+      const container = document.getElementById('main-page');
+      container.innerHTML = '';
+
+      posts
+        .slice()
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .forEach(post => {
+          const link = document.createElement('a');
+          link.href = `/#/${post.slug}`;
+          link.className = 'toc-entry';
+
+          const titleSpan = document.createElement('span');
+          titleSpan.className = 'toc-title';
+          titleSpan.textContent = post.title;
+
+          const dotsSpan = document.createElement('span');
+          dotsSpan.className = 'toc-dots';
+          dotsSpan.textContent = ''; // Optional: add dots manually via CSS
+
+          const chapterSpan = document.createElement('span');
+          chapterSpan.className = 'toc-chapter';
+          chapterSpan.textContent = post.chapter;
+
+          link.appendChild(titleSpan);
+          link.appendChild(dotsSpan);
+          link.appendChild(chapterSpan);
+          container.appendChild(link);
+        });
+    }
+
+    let currentIndex = 0;
+
+    function goBack() {
+      document.getElementById('post-content').style.display = 'none';
+      document.getElementById('main-title').style.display = 'block';
+      document.getElementById('main-page').style.display = 'block';
+    }
+
+    function prevPost() {
+      if (currentIndex > 0) {
+        loadPost(posts[currentIndex - 1].slug);
+      }
+    }
+
+    function nextPost() {
+      if (currentIndex < posts.length - 1) {
+        loadPost(posts[currentIndex + 1].slug);
+      }
+    }
+
+    function parseMarkdown(md) {
+      // 0) Extract mermaid fences
+      md = md.replace(
+        /```mermaid\n([\s\S]*?)```/g,
+        (_, diagram) => `<div class="mermaid">${diagram.trim()}</div>`
+      );
+
+      // 1) Split into blocks on blank lines
+      const blocks = md.split(/\n{2,}/).map(block => {
+        const t = block.trim();
+
+        // 2) Table detection
+        if (/^\|.+\n\|[-:| ]+\n?/.test(block)) {
+          return renderTable(block);
+        }
+
+        // 3) Ordered list detection
+        if (/^\s*\d+\.\s+/.test(t)) {
+          const items = t
+            .split('\n')
+            .map(line => {
+              const m = line.match(/^\s*\d+\.\s+(.*)$/);
+              return m ? `<li>${m[1]}</li>` : '';
+            })
+            .join('');
+          return `<ol>${items}</ol>`;
+        }
+
+        // 4) Block‐level detection
+        const isBlock =
+          t.startsWith('<div class="mermaid">') ||
+          t.startsWith('> QURAN:') ||
+          t.startsWith('> HADITH:') ||
+          t.startsWith('> ') ||
+          t.startsWith('#') ||
+          t.startsWith('<div') ||
+          t.startsWith('<blockquote') ||
+          t.startsWith('<img') ||
+          t.startsWith('$$');
+
+        if (isBlock) return t;
+
+        // 5) Default paragraph
+        return `<p>${t}</p>`;
+      });
+
+      // 6) Run the pipeline for headings, ULs, styling, etc.
+      let html = blocks.join('\n\n')
+        // Headings
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        // Unordered lists
+        .replace(/^- (.*)$/gm, '<li>$1</li>')
+        .replace(/(^|\n)((?:<li>[\s\S]*?<\/li>\n?)+)/gm, '$1<ul>$2</ul>')
+        // Bold & italic
+        .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
+        .replace(/\*(.*?)\*/gim, '<i>$1</i>')
+        // Images
+        .replace(
+          /!\[(.*?)\]\((.*?)\)/gim,
+          '<div class="image-block"><img alt="$1" src="$2"><div class="image-caption">$1</div></div>'
+        )
+        // Links
+        .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2">$1</a>')
+        // Blockquotes
+        .replace(/^>\s?REF:(.*$)/gim, '<div class="quote-secondary">$1</div>')
+        .replace(/^>\s?(.*)$/gim, '<blockquote>$1</blockquote>')
+        // Display math
+        .replace(
+          /\$\$(.*?)\$\$/gim,
+          '<div class="formula-block"><div class="formula-label">Formula</div>$$$1$$</div>'
+        );
+
+      // 7) Inline math: $...$ → \(...\)
+      html = html.replace(/\$(.+?)\$/g, (_, expr) => `\\(${expr}\\)`);
+
+      // 8) Return—but first let MathJax render it into #markdown-output
+      if (window.MathJax) {
+        MathJax.typesetPromise([html]).then(() => {
+          document.getElementById('markdown-output').innerHTML = html;
+        });
+      }
+      return html;
+    }
+
+
+    function renderTable(tableMd) {
+      const lines = tableMd.trim().split('\n');
+      const headers = lines[0].split('|').slice(1, -1).map(h => h.trim());
+      const rows = lines.slice(2).map(r =>
+        r.split('|').slice(1, -1).map(c => c.trim())
+      );
+
+      let tableHtml = '<table><thead><tr>';
+      headers.forEach(h => tableHtml += `<th>${h}</th>`);
+      tableHtml += '</tr></thead><tbody>';
+      rows.forEach(cells => {
+        tableHtml += '<tr>';
+        cells.forEach(c => tableHtml += `<td>${c}</td>`);
+        tableHtml += '</tr>';
+      });
+      tableHtml += '</tbody></table>';
+
+      // Wrap the table in a scroll‐hint container
+      return `<div class="table-wrapper">${tableHtml}</div>`;
+    }
+
+
+    window.addEventListener('hashchange', handleHashRoute);
+    window.addEventListener('DOMContentLoaded', handleHashRoute);
+    window.addEventListener('DOMContentLoaded', renderMainPage);
+
+    function handleHashRoute() {
+      const slug = window.location.hash.replace(/^#\/?/, '');
+      if (slug) {
+        loadPost(slug);
+      } else {
+        goBack();
+      }
+    }
+
+    function loadPost(slug) {
+      const post = posts.find(p => p.slug === slug);
+      if (!post) return;
+
+      currentIndex = posts.indexOf(post);
+
+      fetch(post.file)
+        .then(r => r.text())
+        .then(md => {
+          document.getElementById('main-page').style.display = 'none';
+          document.getElementById('main-title').style.display = 'none';
+          document.getElementById('post-content').style.display = 'block';
+          document.getElementById('markdown-output').innerHTML = parseMarkdown(md);
+          document.getElementById('article-chapter').innerText = post.chapter;
+          document.getElementById('article-title').innerText = post.title;
+          document.getElementById('article-date').innerText = "last updated: " + (post.date || '');
+          window.scrollTo(0, 0);
+
+          // Typeset MathJax after content is loaded
+          if (window.MathJax) {
+            MathJax.typesetPromise();
+          }
+        });
+    }
+
+    window.onpopstate = (e) => {
+      if (e.state?.slug) loadPost(e.state.slug);
+      else goBack();
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const slug = window.location.pathname.slice(1);
+      if (slug) loadPost(slug);
+    });
+  </script>
+</body>
+
+<footer id="main-footer">
+  <p>Copyright 2025 — Contact: <a href="mailto:ouerdiane.nader@gmail.com">ouerdiane.nader@gmail.com</a></p>
+</footer>
+
+</html>
