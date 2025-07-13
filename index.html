@@ -31,7 +31,6 @@
       flex-direction: column;
     }
 
-
     html {
       height: 100%;
       display: flex;
@@ -346,6 +345,7 @@
     @media (max-width: 768px) {
       body {
         max-width: 100%;
+        margin: 0;
         padding: 0 15px;
       }
 
@@ -353,17 +353,11 @@
         width: 100%;
       }
 
-      #markdown-output table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-      }
-
-      .table-wrapper::after {
-        width: 2rem;
-      }
-
       .toc-title {
+        font-size: 0.9em;
+      }
+
+      .toc-chapter {
         font-size: 0.8em;
       }
     }
