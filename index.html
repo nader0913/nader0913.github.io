@@ -14,19 +14,40 @@
 
   <!-- MathJax for LaTeX support -->
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <meta charset="UTF-8">
   <title>Nader Blog</title>
   <style>
+    :root {
+      --max-content-width: 600px;
+      --mobile-breakpoint: 768px;
+      --font-size-base: 1rem;
+      --font-size-small: 0.9rem;
+      --font-size-smaller: 0.8rem;
+      --line-height: 1.5;
+      --color-text: #333;
+      --color-text-light: #666;
+      --color-text-lighter: #888;
+      --color-link: #444;
+      --color-link-hover: #222;
+      --color-border: #ccc;
+      --color-bg-light: #f9f9f9;
+      --color-bg-highlight: #f0f7ff;
+      --spacing-small: 0.5em;
+      --spacing-medium: 1em;
+      --spacing-large: 1.5em;
+    }
+
     @import url('https://fonts.googleapis.com/css2?family=Amiri&display=swap');
 
     body {
       font-family: Arial, sans-serif;
-      max-width: 600px;
+      max-width: var(--max-content-width);
       margin: 10px auto;
       padding: 0 20px;
-      height: 100%;
+      min-height: 98vh;
+      width: 100%;
       display: flex;
       flex-direction: column;
     }
@@ -308,6 +329,7 @@
 
     /* wrapper scroll styling */
     .table-wrapper {
+      -webkit-overflow-scrolling: touch;
       position: relative;
       overflow-x: auto;
       max-width: 100%;
@@ -340,6 +362,101 @@
     .table-wrapper table {
       display: block;
       white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --max-content-width: 100%;
+      }
+
+      body {
+        padding: 0 15px;
+        margin: 5px auto;
+      }
+
+      #main-title h1 {
+        font-size: 1.4em;
+      }
+
+      .article-title {
+        font-size: 1.3em;
+      }
+
+      .article-chapter {
+        font-size: 0.9em;
+        position: static;
+        transform: none;
+        text-align: left;
+        margin-top: 0.5em;
+      }
+
+      .top-nav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5em;
+      }
+
+      .article-date {
+        text-align: left;
+        width: 100%;
+      }
+
+      .toc-entry {
+        flex-wrap: wrap;
+      }
+
+      .toc-title {
+        width: 100%;
+        margin-bottom: 0.2em;
+        white-space: normal;
+      }
+
+      .toc-dots {
+        display: none;
+      }
+
+      .nav-links {
+        flex-direction: column;
+        gap: 0.5em;
+        align-items: stretch;
+      }
+
+      .nav-links a {
+        display: block;
+        padding: 0.5em 0;
+        text-align: center;
+      }
+
+      .table-wrapper::after,
+      .table-wrapper::before {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --font-size-base: 0.95rem;
+      }
+
+      h1 {
+        font-size: 1.2em;
+      }
+
+      h2 {
+        font-size: 1.1em;
+      }
+
+      h3 {
+        font-size: 1em;
+      }
+
+      .toc-entry {
+        font-size: 1em;
+      }
+
+      #markdown-output p {
+        margin: 0.8em 0;
+      }
     }
   </style>
 </head>
