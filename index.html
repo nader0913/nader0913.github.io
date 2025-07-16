@@ -5,22 +5,15 @@
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <!-- Markdown parser (GitHub-Flavored) -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-  <!-- Mermaid diagrams -->
-  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-
   <!-- Polyfill for MathJax -->
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-
   <!-- MathJax for LaTeX support -->
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <meta charset="UTF-8">
   <title>Nader Blog</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Amiri&display=swap');
-
     body {
       font-family: Arial, sans-serif;
       max-width: 600px;
@@ -481,8 +474,6 @@
         // 4) Block‐level detection
         const isBlock =
           t.startsWith('<div class="mermaid">') ||
-          t.startsWith('> QURAN:') ||
-          t.startsWith('> HADITH:') ||
           t.startsWith('> ') ||
           t.startsWith('#') ||
           t.startsWith('<div') ||
@@ -610,7 +601,7 @@
 </body>
 
 <footer id="main-footer">
-  <p>Copyright 2025 — Contact: <a href="mailto:ouerdiane.nader@gmail.com">ouerdiane.nader@gmail.com</a></p>
+  <p>Copyright 2025 — Contact: <a href="mailto:nader.business.mail@gmail.com">nader.business.mail@gmail.com</a></p>
 </footer>
 
 </html>
