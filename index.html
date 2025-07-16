@@ -382,8 +382,6 @@
   </div>
 
   <script>
-    mermaid.initialize({ startOnLoad: false });
-
     const posts = [
       { file: 'pareto-distribution.md', title: 'Pareto Distribution and Wealth Disparity', slug: 'pareto-distribution', chapter: 'Distributions', date: 'Jul 23, 2021' },
       { file: 'baader-meinhof-phenomenon.md', title: 'Baader Meinhof Phenomenon', slug: 'baader-meinhof-phenomenon', chapter: 'Phenomenons', date: '10 Dec, 2023' },
@@ -444,12 +442,6 @@
     }
 
     function parseMarkdown(md) {
-      // 0) Extract mermaid fences
-      md = md.replace(
-        /```mermaid\n([\s\S]*?)```/g,
-        (_, diagram) => `<div class="mermaid">${diagram.trim()}</div>`
-      );
-
       // 1) Split into blocks on blank lines
       const blocks = md.split(/\n{2,}/).map(block => {
         const t = block.trim();
@@ -473,7 +465,6 @@
 
         // 4) Block‐level detection
         const isBlock =
-          t.startsWith('<div class="mermaid">') ||
           t.startsWith('> ') ||
           t.startsWith('#') ||
           t.startsWith('<div') ||
