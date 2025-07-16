@@ -442,6 +442,9 @@
     }
 
     function parseMarkdown(md) {
+      // First, escape the escaped dollar signs with a temporary marker
+      md = md.replace(/\\\$/g, 'ESCAPED_DOLLAR_SIGN');
+
       // 1) Split into blocks on blank lines
       const blocks = md.split(/\n{2,}/).map(block => {
         const t = block.trim();
@@ -508,6 +511,9 @@
 
       // 7) Inline math: $...$ → \(...\)
       html = html.replace(/\$(.+?)\$/g, (_, expr) => `\\(${expr}\\)`);
+
+      // Finally, restore the escaped dollar signs
+      html = html.replace(/ESCAPED_DOLLAR_SIGN/g, '$');
 
       // 8) Return—but first let MathJax render it into #markdown-output
       if (window.MathJax) {
