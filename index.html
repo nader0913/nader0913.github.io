@@ -71,6 +71,7 @@
       line-height: 1.1;
       text-transform: none;
       letter-spacing: 0;
+      border-bottom: none;
     }
 
     #main-nav {
@@ -792,15 +793,15 @@
 
   <script>
     const posts = [
-      { file: 'pareto-distribution.md', title: 'Pareto Distribution and Wealth Disparity', slug: 'pareto-distribution', chapter: 'Distributions', date: 'Jul 23, 2021' },
-      { file: 'baader-meinhof-phenomenon.md', title: 'Baader Meinhof Phenomenon', slug: 'baader-meinhof-phenomenon', chapter: 'Phenomenons', date: '10 Dec, 2023' },
-      { file: 'goldilocks-rule-and-flow-state.md', title: 'Goldilocks Rule and Flow State', slug: 'goldilocks-rule-and-flow-state', chapter: 'Phenomenons', date: '24 Nov, 2024' },
-      { file: 'homomorphic-encryption.md', title: 'Homomorphic Encryption for Dummies', slug: 'homomorphic-encryption', chapter: 'Programming', date: 'Nov 12, 2023' },
-      { file: 'shamir-secret-sharing.md', title: 'Shamir Secret Sharing', slug: 'shamir-secret-sharing', chapter: 'Programming', date: 'Nov 12, 2023' },
+      { file: 'pareto-distribution.md', title: 'Pareto Distribution and Wealth Disparity', slug: 'pareto-distribution', tags: ['Distributions'], date: 'Jul 23, 2021' },
+      { file: 'baader-meinhof-phenomenon.md', title: 'Baader Meinhof Phenomenon', slug: 'baader-meinhof-phenomenon', tags: ['Phenomenons'], date: '10 Dec, 2023' },
+      { file: 'goldilocks-rule-and-flow-state.md', title: 'Goldilocks Rule and Flow State', slug: 'goldilocks-rule-and-flow-state', tags: ['Phenomenons'], date: '24 Nov, 2024' },
+      { file: 'homomorphic-encryption.md', title: 'Homomorphic Encryption for Dummies', slug: 'homomorphic-encryption', tags: ['Cryptography'], date: 'Nov 12, 2023' },
+      { file: 'shamir-secret-sharing.md', title: 'Shamir Secret Sharing', slug: 'shamir-secret-sharing', tags: ['Cryptography'], date: 'Nov 12, 2023' },
     ];
 
     const projects = [
-      { file: 'veilcomm.md', title: 'Veilcomm - Partial Tor Network Implementation in Rust', slug: 'veilcomm', chapter: 'Privacy, Rust', date: 'Nov, 2024' }
+      { file: 'veilcomm.md', title: 'Veilcomm - Partial Tor Network Implementation in Rust', slug: 'veilcomm', tags: ['Privacy', 'Rust'], date: 'Nov, 2024' }
     ];
 
     function renderMainPage() {
@@ -827,7 +828,7 @@
 
         const chapterSpan = document.createElement('span');
         chapterSpan.className = 'toc-chapter';
-        chapterSpan.textContent = post.chapter;
+        chapterSpan.textContent = Array.isArray(post.tags) ? post.tags.join(', ') : post.tags;
 
         const dateSpan = document.createElement('span');
         dateSpan.className = 'toc-date';
@@ -865,7 +866,7 @@
 
         const chapterSpan = document.createElement('span');
         chapterSpan.className = 'toc-chapter';
-        chapterSpan.textContent = project.chapter;
+        chapterSpan.textContent = Array.isArray(project.tags) ? project.tags.join(', ') : project.tags;
 
         const dateSpan = document.createElement('span');
         dateSpan.className = 'toc-date';
@@ -1092,7 +1093,7 @@
           document.getElementById('main-title').style.display = 'none';
           document.getElementById('post-content').style.display = 'block';
           document.getElementById('markdown-output').innerHTML = parseMarkdown(md);
-          document.getElementById('article-chapter').innerText = post.chapter;
+          document.getElementById('article-chapter').innerText = Array.isArray(post.tags) ? post.tags.join(' • ') : post.tags;
           document.getElementById('article-title').innerText = post.title;
           document.getElementById('article-date').innerText = (post.date || '');
           window.scrollTo(0, 0);
