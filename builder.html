@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article Builder</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/article.css">
+    <link rel="stylesheet" href="css/builder.css">
+    <!-- MathJax for LaTeX support -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <!-- Exact same structure as article page -->
+    <div id="post-content" style="display: block;">
+        <div class="top-nav">
+            <a href="#" class="back-link" onclick="goBack()">&larr; Back</a>
+            <div class="article-chapter" contenteditable="true" data-placeholder="Chapter">Chapter</div>
+            <div class="article-date" contenteditable="true" data-placeholder="Date">Dec 25, 2024</div>
+        </div>
+        
+        <div class="article-title" contenteditable="true" data-placeholder="Article Title">Article Title</div>
+        
+        <div id="markdown-output">
+            <!-- Initial header component -->
+            <div class="article-header builder-component" contenteditable="true" data-placeholder="Main heading" data-is-placeholder="true">
+                Main heading
+                <button class="delete-btn" aria-label="Delete component">×</button>
+            </div>
+            
+            <!-- Component buttons will be inserted here dynamically -->
+        </div>
+        
+        <div class="nav-links">
+            <a href="#" onclick="exportArticle()">&larr; Export</a>
+            <a href="#" onclick="clearAll()">Clear &rarr;</a>
+        </div>
+    </div>
+
+    <script>
+        class ArticleBuilder {
+            constructor() {
+                this.content = document.getElementById('markdown-output');
+                this.componentCounter = 0;
+                this.setupEventListeners();
+                this.createComponentButtons();
+            }
+
+            setupEventListeners() {
+                // Handle focus/blur for editing mode
+                document.addEventListener('focusin', (e) => {
+                    if (e.target.contentEditable === 'true') {
+                        e.target.classList.add('editing');
+                        
+                        // Clear placeholder text on first focus
+                        if (e.target.hasAttribute('data-is-placeholder')) {
+                            e.target.textContent = '';
+                            e.target.removeAttribute('data-is-placeholder');
+                        }
+                    }
+                });
+
+                document.addEventListener('focusout', (e) => {
+                    if (e.target.contentEditable === 'true') {
+                        e.target.classList.remove('editing');
+                        this.processContent(e.target);
+                        
+                        // If empty, restore placeholder
+                        if (e.target.textContent.trim() === '') {
+                            e.target.textContent = e.target.dataset.placeholder;
+                            e.target.setAttribute('data-is-placeholder', 'true');
+                        }
+                    }
+                });
+
+                // Handle component deletion
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-btn')) {
+                        const component = e.target.closest('.builder-component');
+                        if (component) {
+                            this.removeComponent(component);
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                    }
+                });
+            }
+
+            createComponentButtons() {
+                const buttons = document.createElement('div');
+                buttons.className = 'component-buttons';
+                buttons.innerHTML = `
+                    <button class="component-btn" data-component="paragraph" title="Add Paragraph">¶</button>
+                    <button class="component-btn" data-component="header" title="Add Header">H1</button>
+                    <button class="component-btn" data-component="subheader" title="Add Subheader">H2</button>
+                    <button class="component-btn" data-component="subsubheader" title="Add Subsubheader">H3</button>
+                    <button class="component-btn" data-component="blockquote" title="Add Quote">"</button>
+                    <button class="component-btn" data-component="list" title="Add List">•</button>
+                    <button class="component-btn" data-component="image" title="Add Image">📷</button>
+                    <button class="component-btn" data-component="math" title="Add Math">∑</button>
+                    <button class="component-btn" data-component="table" title="Add Table">⊞</button>
+                    <button class="component-btn" data-component="divider" title="Add Divider">—</button>
+                `;
+
+                // Add event listeners to buttons
+                buttons.querySelectorAll('.component-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const component = e.currentTarget.dataset.component;
+                        this.addComponent(component);
+                    });
+                });
+
+                this.content.appendChild(buttons);
+            }
+
+            addComponent(type) {
+                const id = `component-${++this.componentCounter}`;
+                let element;
+
+                switch(type) {
+                    case 'paragraph':
+                        element = this.createEditableElement('div', 'article-paragraph', 'Start writing...');
+                        break;
+                    case 'header':
+                        element = this.createEditableElement('div', 'article-header', 'Header text');
+                        break;
+                    case 'subheader':
+                        element = this.createEditableElement('div', 'article-subheader', 'Subheader text');
+                        break;
+                    case 'subsubheader':
+                        element = this.createEditableElement('div', 'article-subsubheader', 'Subsubheader text');
+                        break;
+                    case 'blockquote':
+                        element = this.createEditableElement('div', 'article-blockquote', 'Quote text...');
+                        break;
+                    case 'list':
+                        element = this.createList();
+                        break;
+                    case 'image':
+                        element = this.createImage();
+                        break;
+                    case 'math':
+                        element = this.createMath();
+                        break;
+                    case 'table':
+                        element = this.createTable();
+                        break;
+                    case 'divider':
+                        element = document.createElement('div');
+                        element.className = 'article-divider';
+                        break;
+                }
+
+                if (element) {
+                    element.id = id;
+                    element.classList.add('builder-component');
+                    
+                    // Add delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.innerHTML = '×';
+                    deleteBtn.setAttribute('aria-label', 'Delete component');
+                    element.appendChild(deleteBtn);
+                    
+                    // Insert before component buttons
+                    const buttons = this.content.querySelector('.component-buttons');
+                    this.content.insertBefore(element, buttons);
+                    
+                    // Focus on editable elements
+                    const editable = element.querySelector('[contenteditable="true"]') || 
+                                   (element.contentEditable === 'true' ? element : null);
+                    if (editable) {
+                        editable.focus();
+                    }
+                }
+            }
+
+            createEditableElement(tag, className, placeholder) {
+                const element = document.createElement(tag);
+                element.className = className;
+                element.contentEditable = true;
+                element.dataset.placeholder = placeholder;
+                element.textContent = placeholder;
+                element.setAttribute('data-is-placeholder', 'true');
+                return element;
+            }
+
+            createList() {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'article-list';
+                
+                const list = document.createElement('ul');
+                const li = document.createElement('li');
+                li.contentEditable = true;
+                li.dataset.placeholder = 'List item...';
+                li.textContent = 'List item...';
+                li.setAttribute('data-is-placeholder', 'true');
+                
+                list.appendChild(li);
+                wrapper.appendChild(list);
+                return wrapper;
+            }
+
+            createImage() {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'article-image';
+                
+                const img = document.createElement('img');
+                img.src = 'https://via.placeholder.com/600x300?text=Click+to+change+image';
+                img.alt = 'Placeholder image';
+                img.addEventListener('click', () => {
+                    const url = prompt('Enter image URL:', img.src);
+                    if (url) img.src = url;
+                });
+                
+                const caption = document.createElement('p');
+                caption.contentEditable = true;
+                caption.dataset.placeholder = 'Image caption...';
+                caption.textContent = 'Image caption...';
+                caption.setAttribute('data-is-placeholder', 'true');
+                
+                wrapper.appendChild(img);
+                wrapper.appendChild(caption);
+                return wrapper;
+            }
+
+            createMath() {
+                const element = document.createElement('div');
+                element.className = 'article-math-display';
+                element.contentEditable = true;
+                element.dataset.placeholder = 'Enter LaTeX: e.g., $$E = mc^2$$';
+                element.textContent = '$$E = mc^2$$';
+                element.setAttribute('data-is-placeholder', 'true');
+                
+                element.addEventListener('blur', () => {
+                    if (window.MathJax) {
+                        MathJax.typesetPromise([element]);
+                    }
+                });
+                
+                return element;
+            }
+
+            createTable() {
+                const table = document.createElement('table');
+                table.className = 'article-table';
+                
+                // Create header
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                for (let i = 0; i < 3; i++) {
+                    const th = document.createElement('th');
+                    th.contentEditable = true;
+                    th.textContent = `Header ${i + 1}`;
+                    th.dataset.placeholder = `Header ${i + 1}`;
+                    th.setAttribute('data-is-placeholder', 'true');
+                    headerRow.appendChild(th);
+                }
+                thead.appendChild(headerRow);
+                
+                // Create body
+                const tbody = document.createElement('tbody');
+                for (let i = 0; i < 2; i++) {
+                    const row = document.createElement('tr');
+                    for (let j = 0; j < 3; j++) {
+                        const td = document.createElement('td');
+                        td.contentEditable = true;
+                        td.textContent = `Cell ${i + 1},${j + 1}`;
+                        td.dataset.placeholder = `Cell ${i + 1},${j + 1}`;
+                        td.setAttribute('data-is-placeholder', 'true');
+                        row.appendChild(td);
+                    }
+                    tbody.appendChild(row);
+                }
+                
+                table.appendChild(thead);
+                table.appendChild(tbody);
+                return table;
+            }
+
+            processContent(element) {
+                // Handle special processing like math
+                if (element.classList.contains('article-math-display')) {
+                    if (window.MathJax) {
+                        MathJax.typesetPromise([element]);
+                    }
+                }
+            }
+
+
+            removeComponent(component) {
+                // Don't allow removing the last component
+                const components = this.content.querySelectorAll('.builder-component:not(.component-buttons)');
+                if (components.length <= 1) {
+                    alert('Cannot remove the last component. Add another component first.');
+                    return;
+                }
+
+                // Add removing animation class
+                component.classList.add('removing');
+                
+                // Remove after animation completes
+                setTimeout(() => {
+                    component.remove();
+                }, 200);
+            }
+        }
+
+        // Global functions for nav links
+        function goBack() {
+            if (confirm('Are you sure you want to go back? Unsaved changes will be lost.')) {
+                window.history.back();
+            }
+        }
+
+        function exportArticle() {
+            const title = document.querySelector('.article-title').textContent;
+            const date = document.querySelector('.article-date').textContent;
+            const chapter = document.querySelector('.article-chapter').textContent;
+            
+            // Get content without component buttons
+            const content = document.getElementById('markdown-output').cloneNode(true);
+            const buttons = content.querySelector('.component-buttons');
+            if (buttons) buttons.remove();
+            
+            const html = `
+<div id="post-content">
+    <div class="top-nav">
+        <a href="#" class="back-link">&larr; Back</a>
+        <div class="article-chapter">${chapter}</div>
+        <div class="article-date">${date}</div>
+    </div>
+    <div class="article-title">${title}</div>
+    <div id="markdown-output">
+        ${content.innerHTML}
+    </div>
+    <div class="nav-links">
+        <a href="#">&larr; Previous</a>
+        <a href="#">Next &rarr;</a>
+    </div>
+</div>`;
+            
+            // Create and download file
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'article.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function clearAll() {
+            if (confirm('Are you sure you want to clear all content?')) {
+                const content = document.getElementById('markdown-output');
+                content.innerHTML = '<div class="article-paragraph builder-component" contenteditable="true" data-placeholder="Start writing your article...">Start writing your article...</div>';
+                
+                document.querySelector('.article-title').textContent = 'Article Title';
+                document.querySelector('.article-date').textContent = 'Dec 25, 2024';
+                document.querySelector('.article-chapter').textContent = 'Chapter';
+                
+                // Recreate component buttons
+                const builder = new ArticleBuilder();
+            }
+        }
+
+        // Initialize the builder when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new ArticleBuilder();
+        });
+
+        // Configure MathJax
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+</body>
+</html>

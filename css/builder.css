@@ -1,0 +1,204 @@
+/* Minimal builder styles - maintains exact article appearance */
+
+/* Editable element hover and focus states */
+[contenteditable="true"] {
+  transition: all 0.2s ease;
+  border-radius: 3px;
+  outline: none !important;
+  border: none !important;
+}
+
+[contenteditable="true"]:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+[contenteditable="true"].editing,
+[contenteditable="true"]:focus {
+  background-color: rgba(0, 0, 0, 0.01);
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.15);
+  outline: none !important;
+  border: none !important;
+}
+
+/* Placeholder styling for empty editable elements */
+[contenteditable="true"]:empty:before {
+  content: attr(data-placeholder);
+  color: #999;
+  font-style: italic;
+  pointer-events: none;
+}
+
+[contenteditable="true"].editing:empty:before {
+  color: #bbb;
+}
+
+/* Placeholder text styling */
+[contenteditable="true"][data-is-placeholder="true"] {
+  color: #999;
+  font-style: italic;
+}
+
+[contenteditable="true"][data-is-placeholder="true"].editing {
+  color: #bbb;
+}
+
+/* Component buttons - always visible */
+.component-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em;
+  margin: 1.5em 0;
+  padding: 0.75em;
+  background: rgba(250, 250, 250, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+
+.component-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fff;
+  color: rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+.component-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.9);
+  border-color: rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.component-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Special editing enhancements */
+
+/* Image click hint */
+.article-image img {
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.article-image img:hover {
+  opacity: 0.9;
+}
+
+/* Table cell editing */
+.article-table th:hover,
+.article-table td:hover {
+  background-color: rgba(0, 123, 255, 0.05) !important;
+}
+
+/* Math display editing mode */
+.article-math-display.editing {
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  background-color: #f8f9fa;
+}
+
+/* Focus states for accessibility */
+[contenteditable="true"]:focus {
+  outline: none !important;
+}
+
+.component-btn:focus {
+  outline: 2px solid rgba(0, 0, 0, 0.3);
+  outline-offset: 2px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .component-buttons {
+    gap: 0.2em;
+    padding: 0.5em;
+  }
+  
+  .component-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+}
+
+/* Component deletion */
+.builder-component {
+  position: relative;
+  animation: fadeInUp 0.2s ease-out;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 50%;
+  right: -32px;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  font-family: inherit;
+}
+
+.builder-component:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+/* Animation for new components */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animation for removing components */
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.builder-component.removing {
+  animation: fadeOutDown 0.2s ease-out forwards;
+}
