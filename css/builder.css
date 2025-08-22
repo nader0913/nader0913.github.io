@@ -1,24 +1,21 @@
 /* Minimal builder styles - maintains exact article appearance */
 
-/* Editable element hover and focus states */
+/* Editable element hover and focus states - preserve article styling */
 [contenteditable="true"] {
-  transition: all 0.2s ease;
-  border-radius: 3px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
   outline: none !important;
-  border: none !important;
 }
 
 [contenteditable="true"]:hover {
-  background-color: rgba(0, 0, 0, 0.02);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  background-color: rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
 }
 
 [contenteditable="true"].editing,
 [contenteditable="true"]:focus {
-  background-color: rgba(0, 0, 0, 0.01);
+  background-color: rgba(0, 0, 0, 0.03);
   box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.15);
   outline: none !important;
-  border: none !important;
 }
 
 /* Placeholder styling for empty editable elements */
@@ -33,7 +30,7 @@
   color: #bbb;
 }
 
-/* Placeholder text styling */
+/* Placeholder text styling - only affects text, not structure */
 [contenteditable="true"][data-is-placeholder="true"] {
   color: #999;
   font-style: italic;
@@ -150,7 +147,7 @@
   transform: translateY(-50%);
   width: 24px;
   height: 20px;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   border: none;
   border-radius: 3px;
@@ -162,9 +159,10 @@
   cursor: pointer;
   opacity: 0;
   transition: all 0.2s ease;
-  z-index: 10;
+  z-index: 1000;
   backdrop-filter: blur(4px);
   font-family: inherit;
+  pointer-events: auto;
 }
 
 .builder-component:hover .delete-btn {
@@ -172,7 +170,8 @@
 }
 
 .delete-btn:hover {
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 1);
+  transform: translateY(-50%) scale(1.05);
 }
 
 /* Animation for new components */
