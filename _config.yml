@@ -1,0 +1,10 @@
+plugins:
+  - jekyll-redirect-from
+
+# Enable SPA routing
+include:
+  - _redirects
+
+# GitHub Pages SPA configuration
+baseurl: ""
+url: "https://nader0913.github.io"

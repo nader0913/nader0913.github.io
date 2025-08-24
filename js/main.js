@@ -49,7 +49,7 @@ const ContentRenderer = {
     return (e) => {
       if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
         e.preventDefault();
-        PostLoader.load(slug);
+        Router.navigateTo(slug);
         return false;
       }
     };
@@ -106,6 +106,11 @@ const PageNavigation = {
     DOM.get('main-title').style.display = 'block';
     DOM.get('main-nav').style.display = 'flex';
     document.querySelector('.page-content.active').style.display = 'block';
+    
+    // Update URL to root
+    if (window.location.pathname !== '/') {
+      history.pushState({}, '', '/');
+    }
   }
 };
 
@@ -167,7 +172,7 @@ const PostLoader = {
   navigatePost(direction) {
     const newIndex = currentPostIndex + direction;
     if (newIndex >= 0 && newIndex < POSTS.length) {
-      this.load(POSTS[newIndex].slug);
+      Router.navigateTo(POSTS[newIndex].slug);
     }
   }
 };
@@ -262,9 +267,49 @@ const MarkdownParser = {
 
 // ===== ROUTING =====
 const Router = {
+  navigateTo(slug) {
+    // Use hash routing for compatibility with simple servers
+    const newUrl = `/#/${slug}`;
+    window.location.hash = `#/${slug}`;
+    PostLoader.load(slug);
+  },
+
+  handleRoute() {
+    const path = window.location.pathname;
+    const slug = path.replace(/^\/+|\/+$/g, ''); // Remove leading/trailing slashes
+    
+    if (slug && slug !== '') {
+      // Check if slug exists in posts or projects
+      const postExists = POSTS.some(p => p.slug === slug) || PROJECTS.some(p => p.slug === slug);
+      
+      if (postExists) {
+        PostLoader.load(slug);
+      } else {
+        // Slug doesn't exist, redirect to home
+        console.warn(`Article "${slug}" not found, redirecting to home`);
+        this.navigateToHome();
+      }
+    } else {
+      // Home page or empty slug
+      this.showHomePage();
+    }
+  },
+
+  navigateToHome() {
+    history.replaceState({}, '', '/');
+    this.showHomePage();
+  },
+
+  showHomePage() {
+    PageNavigation.goBack();
+  },
+
   handleHashChange() {
+    // Legacy hash support - redirect to clean URLs
     const slug = window.location.hash.replace(/^#\/?/, '');
-    slug ? PostLoader.load(slug) : PageNavigation.goBack();
+    if (slug) {
+      this.navigateTo(slug);
+    }
   }
 };
 
@@ -287,14 +332,26 @@ function nextPost() {
 
 // ===== INITIALIZATION =====
 window.addEventListener('hashchange', Router.handleHashChange);
-window.onpopstate = (e) => {
-  e.state?.slug ? PostLoader.load(e.state.slug) : PageNavigation.goBack();
-};
+window.addEventListener('popstate', (e) => {
+  if (e.state?.slug) {
+    PostLoader.load(e.state.slug);
+  } else {
+    Router.handleRoute();
+  }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
-  Router.handleHashChange();
+  // Render blog content first
   ContentRenderer.renderList(POSTS, 'main-page');
   
+  // Initialize page visibility
   DOM.getAll('.page-content').forEach(page => page.style.display = 'none');
   DOM.get('blog-page').style.display = 'block';
+  
+  // Handle initial route - check hash first, then path
+  if (window.location.hash) {
+    Router.handleHashChange();
+  } else {
+    Router.handleRoute();
+  }
 });
