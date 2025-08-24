@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,25 +11,27 @@
     <!-- MathJax for LaTeX support -->
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
+
 <body>
     <!-- Exact same structure as article page -->
     <div id="post-content" style="display: block;">
-        <div class="top-nav">
+        <div class="article-top-navigation">
             <a href="#" class="back-link" onclick="goBack()">&larr; Back</a>
             <div class="article-chapter" contenteditable="true" data-placeholder="Chapter">Chapter</div>
             <div class="article-date" contenteditable="true" data-placeholder="Date">Dec 25, 2024</div>
         </div>
-        
+
         <div class="article-title" contenteditable="true" data-placeholder="Article Title">Article Title</div>
-        
+
         <div id="markdown-output">
             <!-- Initial header component -->
-            <div class="article-header builder-component" contenteditable="true" data-placeholder="Main heading" data-is-placeholder="true">Main heading</div>
-            
+            <div class="article-header builder-component" contenteditable="true" data-placeholder="Main heading"
+                data-is-placeholder="true">Main heading</div>
+
             <!-- Component buttons will be inserted here dynamically -->
         </div>
-        
-        <div class="nav-links">
+
+        <div class="article-bottom-navigation">
             <a href="#" onclick="exportArticle()">&larr; Export</a>
             <a href="#" onclick="clearAll()">Clear &rarr;</a>
         </div>
@@ -49,7 +52,7 @@
                 document.addEventListener('focusin', (e) => {
                     if (e.target.contentEditable === 'true') {
                         e.target.classList.add('editing');
-                        
+
                         // Clear placeholder text on first focus
                         if (e.target.hasAttribute('data-is-placeholder')) {
                             e.target.textContent = '';
@@ -62,7 +65,7 @@
                     if (e.target.contentEditable === 'true') {
                         e.target.classList.remove('editing');
                         this.processContent(e.target);
-                        
+
                         // If empty, restore placeholder
                         if (e.target.textContent.trim() === '') {
                             e.target.textContent = e.target.dataset.placeholder;
@@ -131,7 +134,7 @@
                 const id = `component-${++this.componentCounter}`;
                 let element;
 
-                switch(type) {
+                switch (type) {
                     case 'paragraph':
                         element = this.createEditableElement('div', 'article-paragraph', 'Start writing...');
                         break;
@@ -168,21 +171,21 @@
                 if (element) {
                     element.id = id;
                     element.classList.add('builder-component');
-                    
+
                     // Add delete button
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'delete-btn';
                     deleteBtn.innerHTML = '×';
                     deleteBtn.setAttribute('aria-label', 'Delete component');
                     element.appendChild(deleteBtn);
-                    
+
                     // Insert before component buttons
                     const buttons = this.content.querySelector('.component-buttons');
                     this.content.insertBefore(element, buttons);
-                    
+
                     // Focus on editable elements
-                    const editable = element.querySelector('[contenteditable="true"]') || 
-                                   (element.contentEditable === 'true' ? element : null);
+                    const editable = element.querySelector('[contenteditable="true"]') ||
+                        (element.contentEditable === 'true' ? element : null);
                     if (editable) {
                         editable.focus();
                     }
@@ -202,14 +205,14 @@
             createList() {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'article-list';
-                
+
                 const list = document.createElement('ul');
                 const li = document.createElement('li');
                 li.contentEditable = true;
                 li.dataset.placeholder = 'List item...';
                 li.textContent = 'List item...';
                 li.setAttribute('data-is-placeholder', 'true');
-                
+
                 list.appendChild(li);
                 wrapper.appendChild(list);
                 return wrapper;
@@ -218,7 +221,7 @@
             createImage() {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'article-image';
-                
+
                 const img = document.createElement('img');
                 img.src = 'https://via.placeholder.com/600x300?text=Click+to+change+image';
                 img.alt = 'Placeholder image';
@@ -226,13 +229,13 @@
                     const url = prompt('Enter image URL:', img.src);
                     if (url) img.src = url;
                 });
-                
+
                 const caption = document.createElement('p');
                 caption.contentEditable = true;
                 caption.dataset.placeholder = 'Image caption...';
                 caption.textContent = 'Image caption...';
                 caption.setAttribute('data-is-placeholder', 'true');
-                
+
                 wrapper.appendChild(img);
                 wrapper.appendChild(caption);
                 return wrapper;
@@ -245,20 +248,20 @@
                 element.dataset.placeholder = 'Enter LaTeX: e.g., $$E = mc^2$$';
                 element.textContent = '$$E = mc^2$$';
                 element.setAttribute('data-is-placeholder', 'true');
-                
+
                 element.addEventListener('blur', () => {
                     if (window.MathJax) {
                         MathJax.typesetPromise([element]);
                     }
                 });
-                
+
                 return element;
             }
 
             createTable() {
                 const table = document.createElement('table');
                 table.className = 'article-table';
-                
+
                 // Create header
                 const thead = document.createElement('thead');
                 const headerRow = document.createElement('tr');
@@ -271,7 +274,7 @@
                     headerRow.appendChild(th);
                 }
                 thead.appendChild(headerRow);
-                
+
                 // Create body
                 const tbody = document.createElement('tbody');
                 for (let i = 0; i < 2; i++) {
@@ -286,7 +289,7 @@
                     }
                     tbody.appendChild(row);
                 }
-                
+
                 table.appendChild(thead);
                 table.appendChild(tbody);
                 return table;
@@ -312,7 +315,7 @@
 
                 // Add removing animation class
                 component.classList.add('removing');
-                
+
                 // Remove after animation completes
                 setTimeout(() => {
                     component.remove();
@@ -331,15 +334,15 @@
             const title = document.querySelector('.article-title').textContent;
             const date = document.querySelector('.article-date').textContent;
             const chapter = document.querySelector('.article-chapter').textContent;
-            
+
             // Get content without component buttons
             const content = document.getElementById('markdown-output').cloneNode(true);
             const buttons = content.querySelector('.component-buttons');
             if (buttons) buttons.remove();
-            
+
             const html = `
 <div id="post-content">
-    <div class="top-nav">
+    <div class="article-top-navigation">
         <a href="#" class="back-link">&larr; Back</a>
         <div class="article-chapter">${chapter}</div>
         <div class="article-date">${date}</div>
@@ -348,12 +351,12 @@
     <div id="markdown-output">
         ${content.innerHTML}
     </div>
-    <div class="nav-links">
+    <div class="article-bottom-navigation">
         <a href="#">&larr; Previous</a>
         <a href="#">Next &rarr;</a>
     </div>
 </div>`;
-            
+
             // Create and download file
             const blob = new Blob([html], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
@@ -368,11 +371,11 @@
             if (confirm('Are you sure you want to clear all content?')) {
                 const content = document.getElementById('markdown-output');
                 content.innerHTML = '<div class="article-paragraph builder-component" contenteditable="true" data-placeholder="Start writing your article...">Start writing your article...</div>';
-                
+
                 document.querySelector('.article-title').textContent = 'Article Title';
                 document.querySelector('.article-date').textContent = 'Dec 25, 2024';
                 document.querySelector('.article-chapter').textContent = 'Chapter';
-                
+
                 // Recreate component buttons
                 const builder = new ArticleBuilder();
             }
@@ -392,4 +395,5 @@
         };
     </script>
 </body>
+
 </html>

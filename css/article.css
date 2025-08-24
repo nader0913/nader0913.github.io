@@ -28,7 +28,6 @@
   color: #666;
   text-align: right;
   font-style: italic;
-  margin-bottom: 0.8em;
   line-height: 1.45;
 }
 
@@ -152,6 +151,136 @@
   line-height: 1.45;
 }
 
-.article-table tr:nth-child(even) td {
-  background-color: #fafafa;
+.article-top-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 1em 0;
+  padding: 0.8em 0;
+  position: relative;
+  border-bottom: 1px solid #ddd;
+  min-height: 2.4em;
+}
+
+.article-bottom-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2em 0 0 0;
+  padding: 1em 0 0 0;
+  position: relative;
+  border-top: 1px solid #ddd;
+  min-height: 2.4em;
+}
+
+.article-top-navigation .back-link,
+.article-bottom-navigation a {
+  color: #444;
+  text-decoration: none;
+  font-size: 1em;
+  line-height: 1.45;
+}
+
+@media (max-width: 768px) {
+  .article-title {
+    font-size: 1.6em;
+    margin-bottom: 0.8em;
+    line-height: 1.2;
+  }
+
+  .article-header {
+    font-size: 1.3em;
+    margin: 1.2em 0 0.3em;
+  }
+
+  .article-subheader {
+    font-size: 1.1em;
+    margin: 1em 0 0.3em;
+  }
+
+  .article-subsubheader {
+    font-size: 1.05em;
+    margin: 0.8em 0 0.3em;
+  }
+
+  .article-paragraph {
+    margin: 0.6em 0 0;
+    font-size: 0.95em;
+  }
+
+  .article-blockquote {
+    padding: 0.6em 1em;
+    margin: 1em 0;
+    font-size: 0.9em;
+  }
+
+  .article-list {
+    margin: 0.8em 0;
+    padding-left: 1.2em;
+    font-size: 0.9em;
+  }
+
+  .article-table {
+    font-size: 0.8em;
+    margin: 1em 0;
+  }
+
+  .article-table th {
+    padding: 0.4em 0.6em;
+  }
+
+  .article-table td {
+    padding: 0.4em 0.6em;
+  }
+
+  .article-image img {
+    padding: 0.2em;
+  }
+
+  .article-image p {
+    font-size: 0.7em;
+  }
+
+  .article-top-navigation {
+    margin: 0 0 0.8em 0;
+    padding: 0.6em 0;
+    flex-wrap: wrap;
+    min-height: auto;
+  }
+
+  .article-top-navigation .article-chapter {
+    order: 1;
+    flex: 1 1 100%;
+    text-align: center;
+    margin: 0.3em 0;
+    font-size: 0.9em;
+  }
+
+  .article-top-navigation .back-link {
+    order: 0;
+    font-size: 0.9em;
+  }
+
+  .article-top-navigation .article-date {
+    order: 2;
+    font-size: 0.85em;
+    align-self: center;
+  }
+
+  .article-bottom-navigation {
+    margin: 1.5em 0 0 0;
+    padding: 0.8em 0 0 0;
+  }
+
+  .article-bottom-navigation a {
+    font-size: 0.9em;
+  }
+
+  .article-date {
+    font-size: 0.75em;
+  }
+
+  .article-divider {
+    margin: 1em 0;
+  }
 }
