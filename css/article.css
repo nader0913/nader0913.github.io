@@ -64,6 +64,40 @@
   hyphens: none;
 }
 
+.article-paragraph strong,
+.article-paragraph b,
+.article-header strong,
+.article-header b,
+.article-subheader strong,
+.article-subheader b,
+.article-subsubheader strong,
+.article-subsubheader b,
+.article-blockquote strong,
+.article-blockquote b {
+  font-weight: bold;
+}
+
+.article-paragraph em,
+.article-paragraph i,
+.article-header em,
+.article-header i,
+.article-subheader em,
+.article-subheader i,
+.article-subsubheader em,
+.article-subsubheader i,
+.article-blockquote em,
+.article-blockquote i {
+  font-style: italic;
+}
+
+.article-paragraph u,
+.article-header u,
+.article-subheader u,
+.article-subsubheader u,
+.article-blockquote u {
+  text-decoration: underline;
+}
+
 .article-blockquote {
   background-color: #f9f9f9;
   color: #333;
