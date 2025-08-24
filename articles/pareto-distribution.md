@@ -2,7 +2,7 @@
 
 One of the great ways to understand the world is to use distributions. We tend to think that everything has a [normal distribution](https://en.wikipedia.org/wiki/Normal_distribution). IQ for example is normally distributed, that means the majority of people are between 85 and 115 IQ while it gets fewer and fewer when moving away from the median.
 
-![IQ distribution](/iq-distribution.png)
+![IQ distribution](/media/iq-distribution.png)
 
 But this is not always the case. The [distribution of wealth](https://en.wikipedia.org/wiki/Distribution_of_wealth) is a [Pareto distribution](https://en.wikipedia.org/wiki/Pareto_distribution), which is very different from the normal distribution. We always hear that 20% of the richest have 80% of the total wealth or 20% of clients make up 80% of the income, that’s the [Pareto principle](https://en.wikipedia.org/wiki/Pareto_principle).
 

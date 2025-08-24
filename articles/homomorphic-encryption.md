@@ -6,7 +6,7 @@ In response to these challenges, homomorphic encryption offers a sophisticated s
 
 Here is a simple graph explaining a homomorphic encryption scenario:
 
-![Homomorphic Encryption Scenario](/homomorphic-encryption.png)
+![Homomorphic Encryption Scenario](/media/homomorphic-encryption.png)
 
 # Real-World Applications:
 
