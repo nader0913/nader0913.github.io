@@ -542,24 +542,10 @@ const BuilderActions = {
   },
 
   exportArticle() {
-    const title = document.querySelector('.article-title').textContent;
-    const date = document.querySelector('.article-date').textContent;
-    const chapter = document.querySelector('.article-chapter').textContent;
-
     const content = document.getElementById('markdown-output');
     const markdownContent = MarkdownConverter.convertToMarkdown(content);
 
-    const markdown = `---
-title: ${title}
-chapter: ${chapter}
-date: ${date}
----
-
-# ${title}
-
-${markdownContent}`;
-
-    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const blob = new Blob([markdownContent], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
