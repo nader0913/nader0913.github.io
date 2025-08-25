@@ -221,7 +221,8 @@ const MarkdownParser = {
     
     const isSpecialBlock = block.startsWith('> ') || block.startsWith('#') || 
                           block.startsWith('<div') || block.startsWith('<blockquote') || 
-                          block.startsWith('<img') || block.startsWith('$$');
+                          block.startsWith('<img') || block.startsWith('$$') ||
+                          block.includes('![');
     
     return isSpecialBlock ? block : `<div class="article-paragraph">${block}</div>`;
   },
