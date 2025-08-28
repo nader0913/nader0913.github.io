@@ -161,14 +161,17 @@
 
 .article-table {
   width: 100%;
-  border-collapse: collapse;
   margin: 1.2em 0;
+  overflow-x: auto;
+}
+
+.article-table table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
   border: 1px solid #ccc;
   font-size: 0.9em;
   position: relative;
-  display: block;
-  overflow-x: auto;
-  max-width: 100%;
 }
 
 .article-table th {

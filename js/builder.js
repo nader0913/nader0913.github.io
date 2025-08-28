@@ -203,11 +203,10 @@ class ArticleBuilder {
   }
 
   createTable() {
-    const tableContainer = document.createElement('div');
-    tableContainer.className = 'table-container';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'article-table';
 
     const table = document.createElement('table');
-    table.className = 'article-table';
 
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
@@ -233,9 +232,9 @@ class ArticleBuilder {
 
     table.appendChild(thead);
     table.appendChild(tbody);
-    tableContainer.appendChild(table);
+    wrapper.appendChild(table);
 
-    return tableContainer;
+    return wrapper;
   }
 
   setupComponentSelection() {
@@ -357,11 +356,17 @@ class ArticleBuilder {
 
       if (selection.rangeCount > 0 && !selection.isCollapsed) {
         const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-
-        this.toolbar.style.left = `${rect.left + (rect.width / 2) - 25}px`;
-        this.toolbar.style.top = `${rect.top - 45}px`;
-        this.toolbar.style.display = 'block';
+        const container = range.commonAncestorContainer;
+        const element = container.nodeType === Node.TEXT_NODE ? container.parentElement : container;
+        
+        if (this.content.contains(element)) {
+          const rect = range.getBoundingClientRect();
+          this.toolbar.style.left = `${rect.left + (rect.width / 2) - 25}px`;
+          this.toolbar.style.top = `${rect.top - 45}px`;
+          this.toolbar.style.display = 'block';
+        } else {
+          this.toolbar.style.display = 'none';
+        }
       } else {
         this.toolbar.style.display = 'none';
       }

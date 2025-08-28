@@ -252,7 +252,7 @@ const MarkdownParser = {
     const headers = lines[0].split('|').slice(1, -1).map(h => h.trim());
     const rows = lines.slice(2).map(r => r.split('|').slice(1, -1).map(c => c.trim()));
 
-    let html = '<table class="article-table"><thead><tr>';
+    let html = '<div class="article-table"><table><thead><tr>';
     headers.forEach(h => html += `<th>${h}</th>`);
     html += '</tr></thead><tbody>';
     rows.forEach(cells => {
@@ -260,7 +260,7 @@ const MarkdownParser = {
       cells.forEach(c => html += `<td>${c}</td>`);
       html += '</tr>';
     });
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
     
     return html;
   }
