@@ -20,6 +20,27 @@
         </div>
         <div class="article-title" contenteditable="true" data-placeholder="Article Title">Article Title</div>
         <div id="markdown-output"></div>
+        
+        <!-- Component Buttons -->
+        <div class="component-buttons">
+            <div class="button-row">
+                <button class="component-btn" data-component="paragraph" title="Add Paragraph">¶</button>
+                <button class="component-btn" data-component="header" title="Add Header">H1</button>
+                <button class="component-btn" data-component="subheader" title="Add Subheader">H2</button>
+                <button class="component-btn" data-component="subsubheader" title="Add Subsubheader">H3</button>
+                <button class="component-btn" data-component="blockquote" title="Add Quote">"</button>
+                <button class="component-btn" data-component="unordered-list" title="Add Unordered List">•</button>
+                <button class="component-btn" data-component="ordered-list" title="Add Ordered List">1.</button>
+                <button class="component-btn" data-component="image" title="Add Image">📷</button>
+                <button class="component-btn" data-component="table" title="Add Table">⊞</button>
+                <button class="component-btn" data-component="divider" title="Add Divider">—</button>
+            </div>
+            <div class="button-row">
+                <button id="delete-btn" class="component-btn delete-btn" title="Delete Selected Component">×</button>
+                <button id="move-up-btn" class="component-btn" title="Move Up">↑</button>
+                <button id="move-down-btn" class="component-btn" title="Move Down">↓</button>
+            </div>
+        </div>
         <div class="article-bottom-navigation">
             <a href="#" onclick="exportArticle()">&larr; Export</a>
             <a href="#" onclick="clearAll()">Clear &rarr;</a>

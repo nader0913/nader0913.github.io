@@ -17,6 +17,7 @@ html {
   display: flex;
   flex-direction: column;
   text-size-adjust: 100%;
+  overflow-y: scroll;
 }
 
 #main-nav {
