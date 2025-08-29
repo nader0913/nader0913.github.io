@@ -126,6 +126,9 @@ class ArticleBuilder {
       case 'table':
         element = this.createTable();
         break;
+      case 'math':
+        element = this.createMath();
+        break;
       case 'divider':
         element = this.createDivider();
         break;
@@ -148,6 +151,14 @@ class ArticleBuilder {
     element.contentEditable = true;
     element.setAttribute('data-placeholder', config.placeholder);
     return element;
+  }
+
+  createMath() {
+    const div = document.createElement('div');
+    div.className = 'article-math';
+    div.contentEditable = true;
+    div.setAttribute('data-placeholder', 'Enter LaTeX: x^2 + y^2 = r^2');
+    return div;
   }
 
   createDivider() {
@@ -249,52 +260,51 @@ class ArticleBuilder {
   }
 
   updateSelectedComponentStyle() {
-    // Remove selected class from all components
-    document.querySelectorAll('.builder-component').forEach(comp => {
-      comp.classList.remove('selected');
-    });
+    const currentSelected = document.querySelector('.builder-component.selected');
 
-    // Add selected class to current selected component
+    // If selection changed, remove selected class from current and handle math rendering
+    if (currentSelected && currentSelected.id !== this.selectedComponent) {
+      currentSelected.classList.remove('selected');
+
+      // Render math when unselecting
+      if (currentSelected.classList.contains('article-math')) {
+        const mathText = currentSelected.textContent.trim();
+        currentSelected.dataset.mathText = mathText;
+        currentSelected.innerHTML = `$$${mathText}$$`;
+        if (window.MathJax) {
+          MathJax.typesetPromise([currentSelected]);
+        }
+      }
+    }
+
+    // Add selected class to new selected component and handle math input mode
     if (this.selectedComponent) {
       const selectedElement = document.getElementById(this.selectedComponent);
-      if (selectedElement) {
+      if (selectedElement && !selectedElement.classList.contains('selected')) {
         selectedElement.classList.add('selected');
+
+        // Switch to input mode when selecting math
+        if (selectedElement.classList.contains('article-math')) {
+          selectedElement.innerHTML = '';
+          selectedElement.textContent = selectedElement.dataset.mathText;
+        }
       }
     }
   }
 
   updateComponentManagementButtons() {
     const deleteBtn = document.getElementById('delete-btn');
-    if (deleteBtn) {
-      if (this.selectedComponent) {
-        deleteBtn.style.opacity = '1';
-        deleteBtn.style.cursor = 'pointer';
-      } else {
-        deleteBtn.style.opacity = '0.3';
-        deleteBtn.style.cursor = 'not-allowed';
-      }
-    }
-
     const moveUpBtn = document.getElementById('move-up-btn');
-    if (moveUpBtn) {
-      if (this.selectedComponent) {
-        moveUpBtn.style.opacity = '1';
-        moveUpBtn.style.cursor = 'pointer';
-      } else {
-        moveUpBtn.style.opacity = '0.3';
-        moveUpBtn.style.cursor = 'not-allowed';
-      }
-    }
-
     const moveDownBtn = document.getElementById('move-down-btn');
-    if (moveDownBtn) {
-      if (this.selectedComponent) {
-        moveDownBtn.style.opacity = '1';
-        moveDownBtn.style.cursor = 'pointer';
-      } else {
-        moveDownBtn.style.opacity = '0.3';
-        moveDownBtn.style.cursor = 'not-allowed';
-      }
+
+    if (this.selectedComponent) {
+      deleteBtn?.classList.add('active');
+      moveUpBtn?.classList.add('active');
+      moveDownBtn?.classList.add('active');
+    } else {
+      deleteBtn?.classList.remove('active');
+      moveUpBtn?.classList.remove('active');
+      moveDownBtn?.classList.remove('active');
     }
   }
 
@@ -358,7 +368,7 @@ class ArticleBuilder {
         const range = selection.getRangeAt(0);
         const container = range.commonAncestorContainer;
         const element = container.nodeType === Node.TEXT_NODE ? container.parentElement : container;
-        
+
         if (this.content.contains(element)) {
           const rect = range.getBoundingClientRect();
           this.toolbar.style.left = `${rect.left + (rect.width / 2) - 25}px`;
