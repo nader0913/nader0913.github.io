@@ -146,20 +146,6 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
-.article-math {
-  margin: 1em 0;
-  min-height: 3em;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  box-sizing: border-box;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: pre-wrap;
-}
-
 .article-math.selected {
   padding: 0.75em 0.5em;
   line-height: 1.5;

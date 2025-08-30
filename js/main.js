@@ -194,6 +194,7 @@ const MarkdownParser = {
       .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
       .replace(/^>\s?(.*)$/gim, '<div class="article-blockquote">$1</div>');
 
+    html = html.replace(/\$\$(.+?)\$\$/g, (_, expr) => `<div class="article-math">$$${expr}$$</div>`);
     html = html.replace(/\$(.+?)\$/g, (_, expr) => `\\(${expr}\\)`);
     html = html.replace(/ESCAPED_DOLLAR_SIGN/g, '$');
 
