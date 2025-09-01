@@ -12,10 +12,64 @@
 </head>
 
 <body>
-    <!-- Exact same structure as article page -->
-    <div id="post-content" style="display: block;">
+    <!-- Builder Homepage -->
+    <div id="builder-homepage" style="display: block;">
+        <div class="builder-header">
+            <h1>Article Builder</h1>
+        </div>
+        
+        <div class="builder-actions">
+            <button id="new-article-btn" class="builder-primary-btn">
+                <span class="btn-icon">+</span>
+                New Article
+            </button>
+            <label for="import-md-input" class="builder-secondary-btn">
+                <span class="btn-icon">📁</span>
+                Import Markdown
+                <input type="file" id="import-md-input" accept=".md,.markdown,.txt" style="display: none;">
+            </label>
+        </div>
+        
+        <div class="articles-section">
+            <h2>Your Articles</h2>
+            <div id="articles-list" class="articles-grid">
+                <!-- Sample articles for demonstration -->
+                <div class="article-card">
+                    <div class="article-row">
+                        <div class="article-info">
+                            <h3>Sample Article 1</h3>
+                        </div>
+                        <div class="article-actions">
+                            <span class="article-date">Dec 25, 2024</span>
+                            <div class="article-card-actions">
+                                <button class="edit-btn">Edit</button>
+                                <button class="delete-btn">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="article-card">
+                    <div class="article-row">
+                        <div class="article-info">
+                            <h3>Another Article</h3>
+                        </div>
+                        <div class="article-actions">
+                            <span class="article-date">Dec 20, 2024</span>
+                            <div class="article-card-actions">
+                                <button class="edit-btn">Edit</button>
+                                <button class="delete-btn">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Article Editor (hidden by default) -->
+    <div id="article-editor" style="display: none;">
         <div class="article-top-navigation">
-            <a href="#" class="back-link" onclick="goBack()">&larr; Back</a>
+            <a href="#" class="back-link" onclick="showBuilderHomepage()">&larr; Back to Articles</a>
             <div class="article-chapter" contenteditable="true" data-placeholder="Chapter">Chapter</div>
             <div class="article-date" contenteditable="true" data-placeholder="Date">Dec 25, 2024</div>
         </div>
@@ -47,7 +101,6 @@
             <a href="#" onclick="clearAll()">Clear &rarr;</a>
         </div>
     </div>
-
 
     <script src="js/builder.js"></script>
 </body>
