@@ -225,12 +225,12 @@
 .articles-grid {
   display: flex;
   flex-direction: column;
-  gap: 1.5em;
+  gap: 0.75em;
 }
 
 .article-card {
   border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 1em;
+  padding: 0.7em 0.9em;
   background: #fff;
   transition: all 0.2s ease;
 }
@@ -245,7 +245,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1.5em;
+  gap: 1em;
 }
 
 .article-info {
@@ -254,17 +254,17 @@
 }
 
 .article-info h3 {
-  font-size: 1.2em;
+  font-size: 1.05em;
   font-weight: 600;
   margin: 0;
   color: rgba(0, 0, 0, 0.9);
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .article-actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: center;
   gap: 0.5em;
   flex-shrink: 0;
 }
@@ -277,12 +277,12 @@
 
 .article-card-actions {
   display: flex;
-  gap: 0.5em;
+  gap: 0.3em;
 }
 
 .edit-btn,
 .article-card .delete-btn {
-  padding: 0.5em 1em;
+  padding: 0.4em 0.7em;
   border: 1px solid rgba(0, 0, 0, 0.15);
   background: #fff;
   color: rgba(0, 0, 0, 0.7);
@@ -304,6 +304,64 @@
 .article-card .delete-btn:hover {
   background: rgba(231, 76, 60, 0.03);
   color: #e74c3c;
+}
+
+/* ===== MODE TOGGLE CONTAINER ===== */
+.mode-toggle-container {
+  position: absolute;
+  top: 1em;
+  right: 1em;
+  z-index: 100;
+}
+
+/* ===== MODE TOGGLE ===== */
+.mode-toggle {
+  display: flex;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
+}
+
+.mode-btn {
+  padding: 0.5em 1em;
+  border: none;
+  background: #fff;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.mode-btn:last-child {
+  border-right: none;
+}
+
+.mode-btn:hover:not(.active) {
+  background: rgba(0, 0, 0, 0.03);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.mode-btn.active {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.9);
+  font-weight: 600;
+}
+
+/* ===== PREVIEW MODE STYLING ===== */
+.preview-mode [contenteditable="true"]:hover {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.preview-mode [contenteditable="true"]:focus {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.preview-mode .builder-component.selected {
+  background-color: transparent !important;
+  outline: none !important;
 }
 
 /* ===== RESPONSIVE ===== */
@@ -338,16 +396,16 @@
   }
 
   .articles-grid {
-    gap: 1em;
+    gap: 0.5em;
   }
 
   .article-card {
-    padding: 0.75em;
+    padding: 0.5em;
   }
 
   .article-row {
     flex-direction: column;
-    gap: 0.75em;
+    gap: 0.5em;
   }
 
   .article-actions {
