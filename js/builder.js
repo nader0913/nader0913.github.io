@@ -168,6 +168,60 @@ class ArticleBuilder {
     li.contentEditable = true;
     li.setAttribute('data-placeholder', 'List item...');
 
+    wrapper.addEventListener('keydown', (e) => {
+      // When you click on Enter:
+      // - If you are in an empty li, then delete the current li and insert new paragraph component.
+      // - If you are in a non empty li, then insert new li.
+      if (e.key === 'Enter' && e.target.tagName === 'LI') {
+        e.preventDefault();
+        if (e.target.textContent.trim() === '') {
+          e.target.remove();
+          const paragraphElement = this.createSimpleComponent('paragraph');
+          if (paragraphElement) {
+            const id = `component-${++this.componentCounter}`;
+            paragraphElement.id = id;
+            paragraphElement.classList.add('builder-component');
+            wrapper.parentNode.insertBefore(paragraphElement, wrapper.nextSibling);
+            paragraphElement.focus();
+          }
+        } else {
+          const newLi = document.createElement('li');
+          newLi.contentEditable = true;
+          newLi.setAttribute('data-placeholder', 'List item...');
+          e.target.parentNode.insertBefore(newLi, e.target.nextSibling);
+          newLi.focus();
+        }
+      }
+      // When you click on Backspace. If you are in an empty li and it's not the only li, then delete the current li.
+      else if (e.key === 'Backspace' && e.target.tagName === 'LI') {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          if (range.startOffset === 0 && e.target.textContent.trim() === '') {
+            e.preventDefault();
+            // If it's the only item, don't delete
+            const listItems = e.target.parentNode.children;
+            if (listItems.length === 1) {
+              return;
+            }
+            // Remove empty li and focus previous one if exists
+            const prevLi = e.target.previousElementSibling;
+            e.target.remove();
+            if (prevLi) {
+              prevLi.focus();
+              // Place cursor at end
+              const newRange = document.createRange();
+              const newSelection = window.getSelection();
+              newRange.selectNodeContents(prevLi);
+              newRange.collapse(false);
+              newSelection.removeAllRanges();
+              newSelection.addRange(newRange);
+            }
+          }
+        }
+      }
+    });
+
     list.appendChild(li);
     wrapper.appendChild(list);
     return wrapper;
@@ -364,7 +418,7 @@ class ArticleBuilder {
         if (this.content.contains(element)) {
           // Check if the selection is in a formattable element
           const formattableElement = element.closest('.article-paragraph, .article-blockquote, .article-list li, .article-table td, .article-table th');
-          
+
           if (formattableElement) {
             const rect = range.getBoundingClientRect();
             this.toolbar.style.left = `${rect.left + (rect.width / 2) - 25}px`;
