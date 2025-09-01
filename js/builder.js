@@ -136,6 +136,17 @@ class ArticleBuilder {
       element.classList.add('builder-component');
 
       this.content.appendChild(element);
+      
+      // Focus the new component if it's contentEditable
+      if (element.contentEditable === 'true') {
+        element.focus();
+      } else {
+        // For complex components, find the first contentEditable element
+        const firstEditable = element.querySelector('[contenteditable="true"]');
+        if (firstEditable) {
+          firstEditable.focus();
+        }
+      }
     }
   }
 
