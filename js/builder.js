@@ -362,10 +362,17 @@ class ArticleBuilder {
         const element = container.nodeType === Node.TEXT_NODE ? container.parentElement : container;
 
         if (this.content.contains(element)) {
-          const rect = range.getBoundingClientRect();
-          this.toolbar.style.left = `${rect.left + (rect.width / 2) - 25}px`;
-          this.toolbar.style.top = `${rect.top - 45}px`;
-          this.toolbar.style.display = 'block';
+          // Check if the selection is in a formattable element
+          const formattableElement = element.closest('.article-paragraph, .article-blockquote, .article-list li, .article-table td, .article-table th');
+          
+          if (formattableElement) {
+            const rect = range.getBoundingClientRect();
+            this.toolbar.style.left = `${rect.left + (rect.width / 2) - 25}px`;
+            this.toolbar.style.top = `${rect.top - 45}px`;
+            this.toolbar.style.display = 'block';
+          } else {
+            this.toolbar.style.display = 'none';
+          }
         } else {
           this.toolbar.style.display = 'none';
         }
