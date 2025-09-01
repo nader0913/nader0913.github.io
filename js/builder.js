@@ -3,7 +3,8 @@ const COMPONENT_TYPES = {
   header: { tag: 'div', className: 'article-header', placeholder: 'Header text' },
   subheader: { tag: 'div', className: 'article-subheader', placeholder: 'Subheader text' },
   subsubheader: { tag: 'div', className: 'article-subsubheader', placeholder: 'Subsubheader text' },
-  blockquote: { tag: 'div', className: 'article-blockquote', placeholder: 'Quote text...' }
+  blockquote: { tag: 'div', className: 'article-blockquote', placeholder: 'Quote text...' },
+  math: { tag: 'div', className: 'article-math', placeholder: 'Enter LaTeX: x^2 + y^2 = r^2' }
 };
 
 class ArticleBuilder {
@@ -472,6 +473,277 @@ class ArticleBuilder {
   }
 }
 
+// Global navigation functions for builder homepage
+function showBuilderHomepage() {
+  document.getElementById('builder-homepage').style.display = 'block';
+  document.getElementById('article-editor').style.display = 'none';
+}
+
+function showArticleEditor() {
+  document.getElementById('builder-homepage').style.display = 'none';
+  document.getElementById('article-editor').style.display = 'block';
+}
+
+function exportArticle() {
+  console.log('Export article functionality to be implemented');
+}
+
+function clearAll() {
+  if (confirm('Are you sure you want to clear all content?')) {
+    document.getElementById('markdown-output').innerHTML = '';
+    console.log('Article cleared');
+  }
+}
+
+function importMarkdownToBuilder(markdown) {
+  const outputContainer = document.getElementById('markdown-output');
+  outputContainer.innerHTML = '';
+  
+  // Extract metadata if present (YAML front matter)
+  let content = markdown;
+  let metadata = {};
+  
+  if (markdown.startsWith('---')) {
+    const yamlEnd = markdown.indexOf('---', 3);
+    if (yamlEnd !== -1) {
+      const yamlContent = markdown.substring(3, yamlEnd).trim();
+      content = markdown.substring(yamlEnd + 3).trim();
+      
+      // Simple YAML parser for title and date
+      yamlContent.split('\n').forEach(line => {
+        const [key, ...valueParts] = line.split(':');
+        if (key && valueParts.length > 0) {
+          const value = valueParts.join(':').trim().replace(/['"]/g, '');
+          metadata[key.trim()] = value;
+        }
+      });
+    }
+  }
+  
+  // Note: Title and date are not imported - user can add them manually later
+  
+  // First, handle math blocks that might span multiple paragraphs
+  content = content.replace(/\$\$([\s\S]*?)\$\$/g, (match, mathContent) => {
+    return `MATHBLOCK:${mathContent.trim()}:MATHBLOCK`;
+  });
+  
+  // Split content into blocks
+  const blocks = content.split(/\n\s*\n/).filter(block => block.trim());
+  let componentCounter = 0;
+  
+  blocks.forEach(block => {
+    const trimmedBlock = block.trim();
+    if (!trimmedBlock) return;
+    
+    let element = null;
+    const id = `component-${++componentCounter}`;
+    
+    // Headers
+    if (trimmedBlock.startsWith('### ')) {
+      element = createBuilderComponent('subsubheader', trimmedBlock.substring(4));
+    } else if (trimmedBlock.startsWith('## ')) {
+      element = createBuilderComponent('subheader', trimmedBlock.substring(3));
+    } else if (trimmedBlock.startsWith('# ')) {
+      element = createBuilderComponent('header', trimmedBlock.substring(2));
+    }
+    // Blockquote
+    else if (trimmedBlock.startsWith('> ')) {
+      const quoteText = trimmedBlock.split('\n').map(line => 
+        line.startsWith('> ') ? line.substring(2) : line
+      ).join('\n');
+      element = createBuilderComponent('blockquote', quoteText);
+    }
+    // Lists
+    else if (/^\s*\d+\.\s+/.test(trimmedBlock)) {
+      element = createBuilderList('ol', trimmedBlock);
+    } else if (/^\s*[-*+]\s+/.test(trimmedBlock)) {
+      element = createBuilderList('ul', trimmedBlock);
+    }
+    // Tables
+    else if (trimmedBlock.includes('|') && trimmedBlock.includes('---')) {
+      element = createBuilderTable(trimmedBlock);
+    }
+    // Math blocks (preprocessed)
+    else if (trimmedBlock.startsWith('MATHBLOCK:') && trimmedBlock.endsWith(':MATHBLOCK')) {
+      const mathContent = trimmedBlock.slice(10, -10);
+      element = createBuilderComponent('math', mathContent);
+    }
+    // Regular paragraph
+    else {
+      element = createBuilderComponent('paragraph', trimmedBlock);
+    }
+    
+    if (element) {
+      element.id = id;
+      element.classList.add('builder-component');
+      outputContainer.appendChild(element);
+    }
+  });
+}
+
+function createBuilderComponent(type, content) {
+  const config = COMPONENT_TYPES[type];
+  if (!config) return null;
+  
+  const element = document.createElement(config.tag);
+  element.className = config.className;
+  element.contentEditable = true;
+  element.setAttribute('data-placeholder', config.placeholder);
+  
+  if (content) {
+    if (type === 'math') {
+      // For math components, store the raw LaTeX and render it
+      element.dataset.mathText = content;
+      element.innerHTML = `$$${content}$$`;
+      // Trigger MathJax rendering after a short delay
+      setTimeout(() => {
+        if (window.MathJax) {
+          MathJax.typesetPromise([element]);
+        }
+      }, 100);
+    } else {
+      // Convert markdown formatting to HTML for other components
+      const htmlContent = convertMarkdownToHtml(content);
+      element.innerHTML = htmlContent;
+    }
+  }
+  
+  return element;
+}
+
+function convertMarkdownToHtml(text) {
+  return text
+    // Bold
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    // Italic
+    .replace(/\*(.*?)\*/g, '<i>$1</i>')
+    // Links
+    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+    // Strikethrough
+    .replace(/~~(.*?)~~/g, '<s>$1</s>');
+}
+
+function createBuilderList(listType, content) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'article-list';
+  
+  const list = document.createElement(listType);
+  const lines = content.split('\n').filter(line => line.trim());
+  
+  lines.forEach(line => {
+    const match = listType === 'ol' ? 
+      line.match(/^\s*\d+\.\s+(.*)$/) : 
+      line.match(/^\s*[-*+]\s+(.*)$/);
+    
+    if (match) {
+      const li = document.createElement('li');
+      li.contentEditable = true;
+      li.innerHTML = convertMarkdownToHtml(match[1]);
+      li.setAttribute('data-placeholder', 'List item...');
+      list.appendChild(li);
+    }
+  });
+  
+  wrapper.appendChild(list);
+  return wrapper;
+}
+
+function createBuilderTable(content) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'article-table';
+  
+  const table = document.createElement('table');
+  const lines = content.split('\n').filter(line => line.trim());
+  
+  // Parse headers
+  const headerCells = lines[0].split('|').slice(1, -1).map(cell => cell.trim());
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  
+  headerCells.forEach(headerText => {
+    const th = document.createElement('th');
+    th.contentEditable = true;
+    th.innerHTML = convertMarkdownToHtml(headerText);
+    th.setAttribute('data-placeholder', 'Header');
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  
+  // Parse data rows (skip separator line)
+  const tbody = document.createElement('tbody');
+  lines.slice(2).forEach(line => {
+    const cells = line.split('|').slice(1, -1).map(cell => cell.trim());
+    const row = document.createElement('tr');
+    
+    cells.forEach(cellText => {
+      const td = document.createElement('td');
+      td.contentEditable = true;
+      td.innerHTML = convertMarkdownToHtml(cellText);
+      td.setAttribute('data-placeholder', 'Cell');
+      row.appendChild(td);
+    });
+    tbody.appendChild(row);
+  });
+  
+  table.appendChild(thead);
+  table.appendChild(tbody);
+  wrapper.appendChild(table);
+  return wrapper;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  new ArticleBuilder();
+  // Initialize ArticleBuilder only when in editor mode
+  const articleEditor = document.getElementById('article-editor');
+  if (articleEditor && articleEditor.style.display !== 'none') {
+    new ArticleBuilder();
+  }
+
+  // Setup homepage button listeners
+  const newArticleBtn = document.getElementById('new-article-btn');
+  if (newArticleBtn) {
+    newArticleBtn.addEventListener('click', () => {
+      showArticleEditor();
+      // Initialize ArticleBuilder when switching to editor
+      if (!window.articleBuilderInstance) {
+        window.articleBuilderInstance = new ArticleBuilder();
+      }
+    });
+  }
+
+  const importMdInput = document.getElementById('import-md-input');
+  if (importMdInput) {
+    importMdInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file && file.type.includes('text')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const markdown = event.target.result;
+          importMarkdownToBuilder(markdown);
+          showArticleEditor();
+          if (!window.articleBuilderInstance) {
+            window.articleBuilderInstance = new ArticleBuilder();
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+  }
+
+  // Setup article card listeners
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('edit-btn')) {
+      showArticleEditor();
+      if (!window.articleBuilderInstance) {
+        window.articleBuilderInstance = new ArticleBuilder();
+      }
+      console.log('Edit article functionality to be implemented');
+    }
+    
+    if (e.target.classList.contains('delete-btn') && e.target.closest('.article-card')) {
+      if (confirm('Are you sure you want to delete this article?')) {
+        e.target.closest('.article-card').remove();
+        console.log('Delete article functionality to be implemented');
+      }
+    }
+  });
 });
