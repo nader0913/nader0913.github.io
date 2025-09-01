@@ -16,13 +16,6 @@
   letter-spacing: -0.02em;
 }
 
-.article-divider {
-  border: none;
-  height: 1px;
-  background-color: #333;
-  margin: 1.5em 0;
-}
-
 .article-date {
   font-size: 0.8em;
   color: #666;
@@ -329,9 +322,5 @@
 
   .article-date {
     font-size: 0.75em;
-  }
-
-  .article-divider {
-    margin: 1em 0;
   }
 }

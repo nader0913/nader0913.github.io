@@ -129,9 +129,6 @@ class ArticleBuilder {
       case 'math':
         element = this.createMath();
         break;
-      case 'divider':
-        element = this.createDivider();
-        break;
     }
 
     if (element) {
@@ -161,11 +158,6 @@ class ArticleBuilder {
     return div;
   }
 
-  createDivider() {
-    const div = document.createElement('div');
-    div.className = 'article-divider';
-    return div;
-  }
 
   createList(listType = 'ul') {
     const wrapper = document.createElement('div');
