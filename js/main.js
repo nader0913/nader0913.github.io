@@ -58,7 +58,7 @@ const ContentRenderer = {
   renderList(items, containerId) {
     const container = DOM.get(containerId);
     container.innerHTML = '';
-    
+
     const sorted = [...items].sort((a, b) => new Date(b.date) - new Date(a.date));
     sorted.forEach(item => container.appendChild(this.createEntryLink(item)));
   }
@@ -71,7 +71,7 @@ const PageNavigation = {
     this.clearActiveNav();
     this.showPage(pageId);
     this.setActiveNav(element);
-    
+
     if (pageId === 'projects') {
       ContentRenderer.renderList(PROJECTS, 'projects-list');
     }
@@ -106,7 +106,7 @@ const PageNavigation = {
     DOM.get('main-title').style.display = 'block';
     DOM.get('main-nav').style.display = 'flex';
     document.querySelector('.page-content.active').style.display = 'block';
-    
+
     // Update URL to root
     if (window.location.pathname !== '/') {
       history.pushState({}, '', '/');
@@ -121,7 +121,7 @@ const PostLoader = {
     if (!post.item) return;
 
     currentPostIndex = post.index;
-    
+
     fetch(post.item.file)
       .then(r => r.text())
       .then(md => this.displayPost(post.item, md));
@@ -146,7 +146,7 @@ const PostLoader = {
     this.showPostUI();
     this.setPostContent(post, markdown);
     window.scrollTo(0, 0);
-    
+
     if (window.MathJax) {
       MathJax.typesetPromise();
     }
@@ -181,9 +181,9 @@ const PostLoader = {
 const MarkdownParser = {
   parse(md) {
     md = md.replace(/\\\$/g, 'ESCAPED_DOLLAR_SIGN');
-    
+
     const blocks = md.split(/\n{2,}/).map(block => this.parseBlock(block.trim()));
-    
+
     let html = blocks.join('\n\n')
       .replace(/^### (.*$)/gim, '<div class="article-subsubheader">$1</div>')
       .replace(/^## (.*$)/gim, '<div class="article-subheader">$1</div>')
@@ -194,7 +194,7 @@ const MarkdownParser = {
       .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
       .replace(/^>\s?(.*)$/gim, '<div class="article-blockquote">$1</div>');
 
-    html = html.replace(/\$\$(.+?)\$\$/g, (_, expr) => `<div class="article-math">$$${expr}$$</div>`);
+    html = html.replace(/\$\$([\s\S]+?)\$\$/g, (_, expr) => `<div class="article-math">$$${expr}$$</div>`);
     html = html.replace(/\$(.+?)\$/g, (_, expr) => `\\(${expr}\\)`);
     html = html.replace(/ESCAPED_DOLLAR_SIGN/g, '$');
 
@@ -203,7 +203,7 @@ const MarkdownParser = {
         DOM.get('markdown-output').innerHTML = html;
       });
     }
-    
+
     return html;
   },
 
@@ -211,20 +211,20 @@ const MarkdownParser = {
     if (/^\|.+\n\|[-:| ]+\n?/.test(block)) {
       return this.parseTable(block);
     }
-    
+
     if (/^\s*\d+\.\s+/.test(block)) {
       return this.parseOrderedList(block);
     }
-    
+
     if (/^\s*-\s+/.test(block)) {
       return this.parseUnorderedList(block);
     }
-    
-    const isSpecialBlock = block.startsWith('> ') || block.startsWith('#') || 
-                          block.startsWith('<div') || block.startsWith('<blockquote') || 
-                          block.startsWith('<img') || block.startsWith('$$') ||
-                          block.includes('![');
-    
+
+    const isSpecialBlock = block.startsWith('> ') || block.startsWith('#') ||
+      block.startsWith('<div') || block.startsWith('<blockquote') ||
+      block.startsWith('<img') || block.startsWith('$$') ||
+      block.includes('![');
+
     return isSpecialBlock ? block : `<div class="article-paragraph">${block}</div>`;
   },
 
@@ -262,7 +262,7 @@ const MarkdownParser = {
       html += '</tr>';
     });
     html += '</tbody></table></div>';
-    
+
     return html;
   }
 };
@@ -279,11 +279,11 @@ const Router = {
   handleRoute() {
     const path = window.location.pathname;
     const slug = path.replace(/^\/+|\/+$/g, ''); // Remove leading/trailing slashes
-    
+
     if (slug && slug !== '') {
       // Check if slug exists in posts or projects
       const postExists = POSTS.some(p => p.slug === slug) || PROJECTS.some(p => p.slug === slug);
-      
+
       if (postExists) {
         PostLoader.load(slug);
       } else {
@@ -345,11 +345,11 @@ window.addEventListener('popstate', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   // Render blog content first
   ContentRenderer.renderList(POSTS, 'main-page');
-  
+
   // Initialize page visibility
   DOM.getAll('.page-content').forEach(page => page.style.display = 'none');
   DOM.get('blog-page').style.display = 'block';
-  
+
   // Handle initial route - check hash first, then path
   if (window.location.hash) {
     Router.handleHashChange();
