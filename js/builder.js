@@ -691,6 +691,37 @@ function createBuilderTable(content) {
   return wrapper;
 }
 
+function setEditMode(isEditMode) {
+  const outputContainer = document.getElementById('markdown-output');
+  const componentButtons = document.querySelector('.component-buttons');
+  
+  if (isEditMode) {
+    // Enable edit mode
+    outputContainer.classList.remove('preview-mode');
+    if (componentButtons) componentButtons.style.display = 'block';
+    
+    // Make all elements contentEditable
+    outputContainer.querySelectorAll('[contenteditable]').forEach(el => {
+      el.contentEditable = true;
+    });
+    outputContainer.querySelectorAll('.builder-component').forEach(el => {
+      el.contentEditable = true;
+    });
+  } else {
+    // Enable preview mode
+    outputContainer.classList.add('preview-mode');
+    if (componentButtons) componentButtons.style.display = 'none';
+    
+    // Disable contentEditable
+    outputContainer.querySelectorAll('[contenteditable]').forEach(el => {
+      el.contentEditable = false;
+    });
+    outputContainer.querySelectorAll('.builder-component').forEach(el => {
+      el.contentEditable = false;
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize ArticleBuilder only when in editor mode
   const articleEditor = document.getElementById('article-editor');
@@ -726,6 +757,24 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         reader.readAsText(file);
       }
+    });
+  }
+
+  // Setup mode toggle listeners
+  const editModeBtn = document.getElementById('edit-mode-btn');
+  const previewModeBtn = document.getElementById('preview-mode-btn');
+  
+  if (editModeBtn && previewModeBtn) {
+    editModeBtn.addEventListener('click', () => {
+      editModeBtn.classList.add('active');
+      previewModeBtn.classList.remove('active');
+      setEditMode(true);
+    });
+    
+    previewModeBtn.addEventListener('click', () => {
+      previewModeBtn.classList.add('active');
+      editModeBtn.classList.remove('active');
+      setEditMode(false);
     });
   }
 
