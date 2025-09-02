@@ -485,7 +485,54 @@ function showArticleEditor() {
 }
 
 function exportArticle() {
-  console.log('Export article functionality to be implemented');
+  const outputContainer = document.getElementById('markdown-output');
+  const titleElement = document.querySelector('.article-title');
+  const chapterElement = document.querySelector('.article-chapter');
+  const dateElement = document.querySelector('.article-date');
+  
+  let markdown = '';
+  
+  // Add YAML front matter if title exists
+  const title = titleElement?.textContent?.trim();
+  const chapter = chapterElement?.textContent?.trim();
+  const date = dateElement?.textContent?.trim();
+  
+  if (title && title !== 'Article Title') {
+    markdown += '---\n';
+    markdown += `title: ${title}\n`;
+    if (date && date !== 'Dec 25, 2024') {
+      markdown += `date: ${date}\n`;
+    }
+    if (chapter && chapter !== 'Chapter') {
+      markdown += `chapter: ${chapter}\n`;
+    }
+    markdown += '---\n\n';
+  }
+  
+  // Convert each component to markdown
+  const components = outputContainer.querySelectorAll('.builder-component');
+  
+  components.forEach((component, index) => {
+    const componentMarkdown = convertComponentToMarkdown(component);
+    if (componentMarkdown) {
+      markdown += componentMarkdown;
+      // Add spacing between components except for the last one
+      if (index < components.length - 1) {
+        markdown += '\n\n';
+      }
+    }
+  });
+  
+  // Create and download the file
+  const blob = new Blob([markdown], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = title ? `${title.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-').toLowerCase()}.md` : 'article.md';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function clearAll() {
@@ -493,6 +540,173 @@ function clearAll() {
     document.getElementById('markdown-output').innerHTML = '';
     console.log('Article cleared');
   }
+}
+
+function convertComponentToMarkdown(component) {
+  const className = component.className;
+  const content = component.textContent.trim();
+  
+  if (!content) return '';
+  
+  // Handle different component types
+  if (className.includes('article-header')) {
+    return `# ${convertHtmlToMarkdown(component.innerHTML)}`;
+  } else if (className.includes('article-subheader')) {
+    return `## ${convertHtmlToMarkdown(component.innerHTML)}`;
+  } else if (className.includes('article-subsubheader')) {
+    return `### ${convertHtmlToMarkdown(component.innerHTML)}`;
+  } else if (className.includes('article-blockquote')) {
+    const lines = convertHtmlToMarkdown(component.innerHTML).split('\n');
+    return lines.map(line => `> ${line}`).join('\n');
+  } else if (className.includes('article-list')) {
+    return convertListToMarkdown(component);
+  } else if (className.includes('article-table')) {
+    return convertTableToMarkdown(component);
+  } else if (className.includes('article-math')) {
+    // For math components, use the stored LaTeX or extract from display
+    const mathText = component.dataset.mathText || extractMathFromDisplay(component);
+    return `$$\n${mathText}\n$$`;
+  } else if (className.includes('article-paragraph')) {
+    return convertHtmlToMarkdown(component.innerHTML);
+  }
+  
+  // Default to paragraph if unknown type
+  return convertHtmlToMarkdown(component.innerHTML);
+}
+
+function convertHtmlToMarkdown(html) {
+  return html
+    // Bold
+    .replace(/<b>(.*?)<\/b>/g, '**$1**')
+    .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
+    // Italic
+    .replace(/<i>(.*?)<\/i>/g, '*$1*')
+    .replace(/<em>(.*?)<\/em>/g, '*$1*')
+    // Strikethrough
+    .replace(/<s>(.*?)<\/s>/g, '~~$1~~')
+    // Links
+    .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
+    // Remove any other HTML tags
+    .replace(/<[^>]*>/g, '')
+    // Decode HTML entities
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, '/');
+}
+
+function convertListToMarkdown(listComponent) {
+  const list = listComponent.querySelector('ol, ul');
+  if (!list) return '';
+  
+  const isOrdered = list.tagName === 'OL';
+  const items = list.querySelectorAll('li');
+  
+  return Array.from(items).map((item, index) => {
+    const content = convertHtmlToMarkdown(item.innerHTML);
+    if (isOrdered) {
+      return `${index + 1}. ${content}`;
+    } else {
+      return `- ${content}`;
+    }
+  }).join('\n');
+}
+
+function convertTableToMarkdown(tableComponent) {
+  const table = tableComponent.querySelector('table');
+  if (!table) return '';
+  
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  
+  let markdown = '';
+  
+  // Header row
+  if (thead) {
+    const headerCells = thead.querySelectorAll('th');
+    const headerRow = Array.from(headerCells).map(cell => 
+      convertHtmlToMarkdown(cell.innerHTML)
+    ).join(' | ');
+    markdown += `| ${headerRow} |\n`;
+    
+    // Separator row
+    const separatorRow = Array.from(headerCells).map(() => '---').join(' | ');
+    markdown += `| ${separatorRow} |\n`;
+  }
+  
+  // Data rows
+  if (tbody) {
+    const rows = tbody.querySelectorAll('tr');
+    Array.from(rows).forEach(row => {
+      const cells = row.querySelectorAll('td');
+      const rowContent = Array.from(cells).map(cell => 
+        convertHtmlToMarkdown(cell.innerHTML)
+      ).join(' | ');
+      markdown += `| ${rowContent} |\n`;
+    });
+  }
+  
+  return markdown.trim();
+}
+
+function extractMathFromDisplay(mathElement) {
+  // Try to extract LaTeX from various possible formats
+  const text = mathElement.textContent || mathElement.innerHTML;
+  
+  // If it's already wrapped in $$, extract content
+  const dollarMatch = text.match(/\$\$(.*?)\$\$/s);
+  if (dollarMatch) {
+    return dollarMatch[1].trim();
+  }
+  
+  // Return as-is if no $$ wrapper found
+  return text.trim();
+}
+
+
+function generateMarkdownFromBuilder() {
+  // This is the same logic as exportArticle but returns the markdown instead of downloading
+  const outputContainer = document.getElementById('markdown-output');
+  const titleElement = document.querySelector('.article-title');
+  const chapterElement = document.querySelector('.article-chapter');
+  const dateElement = document.querySelector('.article-date');
+  
+  let markdown = '';
+  
+  // Add YAML front matter if title exists
+  const title = titleElement?.textContent?.trim();
+  const chapter = chapterElement?.textContent?.trim();
+  const date = dateElement?.textContent?.trim();
+  
+  if (title && title !== 'Article Title') {
+    markdown += '---\n';
+    markdown += `title: ${title}\n`;
+    if (date && date !== 'Dec 25, 2024') {
+      markdown += `date: ${date}\n`;
+    }
+    if (chapter && chapter !== 'Chapter') {
+      markdown += `chapter: ${chapter}\n`;
+    }
+    markdown += '---\n\n';
+  }
+  
+  // Convert each component to markdown
+  const components = outputContainer.querySelectorAll('.builder-component');
+  
+  components.forEach((component, index) => {
+    const componentMarkdown = convertComponentToMarkdown(component);
+    if (componentMarkdown) {
+      markdown += componentMarkdown;
+      // Add spacing between components except for the last one
+      if (index < components.length - 1) {
+        markdown += '\n\n';
+      }
+    }
+  });
+  
+  return markdown;
 }
 
 function importMarkdownToBuilder(markdown) {
@@ -523,12 +737,35 @@ function importMarkdownToBuilder(markdown) {
   // Note: Title and date are not imported - user can add them manually later
   
   // First, handle math blocks that might span multiple paragraphs
-  content = content.replace(/\$\$([\s\S]*?)\$\$/g, (match, mathContent) => {
+  // Use a more robust regex to handle multiline math blocks
+  content = content.replace(/\$\$\s*\n?([\s\S]*?)\n?\s*\$\$/g, (_, mathContent) => {
     return `MATHBLOCK:${mathContent.trim()}:MATHBLOCK`;
   });
   
-  // Split content into blocks
-  const blocks = content.split(/\n\s*\n/).filter(block => block.trim());
+  // Split content into blocks, but also handle MATHBLOCK markers specially
+  let rawBlocks = content.split(/\n\s*\n/).filter(block => block.trim());
+  
+  // Process blocks to separate math blocks that might be mixed with text
+  const blocks = [];
+  rawBlocks.forEach(block => {
+    const trimmedBlock = block.trim();
+    if (!trimmedBlock) return;
+    
+    // Check if this block contains MATHBLOCK markers mixed with other content
+    if (trimmedBlock.includes('MATHBLOCK:') && trimmedBlock.includes(':MATHBLOCK')) {
+      // Split on MATHBLOCK markers to separate them
+      const parts = trimmedBlock.split(/(MATHBLOCK:.*?:MATHBLOCK)/);
+      parts.forEach(part => {
+        const trimmedPart = part.trim();
+        if (trimmedPart) {
+          blocks.push(trimmedPart);
+        }
+      });
+    } else {
+      blocks.push(trimmedBlock);
+    }
+  });
+  
   let componentCounter = 0;
   
   blocks.forEach(block => {
@@ -795,4 +1032,5 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
 });

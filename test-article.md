@@ -1,9 +1,3 @@
----
-title: Test Article for Builder Import
-date: Dec 25, 2024
-tags: ['Test', 'Demo']
----
-
 # Main Header
 
 This is a **bold text** and this is *italic text* with ~~strikethrough~~ formatting. Here's a [link to Google](https://google.com).
