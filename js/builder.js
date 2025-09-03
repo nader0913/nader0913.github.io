@@ -14,6 +14,12 @@ class ArticleBuilder {
     this._selectedComponent = null;
     this.debugMode = false;
     this.debugElement = null;
+    this.currentArticleId = null;
+    this.autoSaveDelay = 500;
+    this.autoSaveTimer = null;
+    this.savingIndicator = document.getElementById('saving-indicator');
+    this.savingText = this.savingIndicator?.querySelector('.saving-text');
+    this.hasUnsavedChanges = false;
     this.init();
   }
 
@@ -35,6 +41,170 @@ class ArticleBuilder {
     this.setupPasteHandling();
     this.setupDebugMode();
     this.setupTextSelectionToolbar();
+    this.setupAutoSave();
+  }
+
+  setupAutoSave() {
+    // Listen for content changes
+    const observeChanges = () => {
+      this.scheduleAutoSave();
+    };
+
+    // Watch for content changes in the editor
+    const observer = new MutationObserver(observeChanges);
+    observer.observe(this.content, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true
+    });
+
+    // Watch for changes to title, date, and chapter
+    const titleElement = document.querySelector('.article-title');
+    const dateElement = document.querySelector('.article-date');
+    const chapterElement = document.querySelector('.article-chapter');
+
+    // Add title length limit
+    if (titleElement) {
+      const maxLength = 80;
+
+      titleElement.addEventListener('input', (e) => {
+        if (e.target.textContent.length > maxLength) {
+          e.target.textContent = e.target.textContent.substring(0, maxLength);
+          // Place cursor at end
+          const range = document.createRange();
+          const selection = window.getSelection();
+          range.selectNodeContents(e.target);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+        observeChanges();
+      });
+
+      titleElement.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text/plain');
+        const currentText = e.target.textContent || '';
+        const selection = window.getSelection();
+
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const startPos = range.startOffset;
+          const endPos = range.endOffset;
+
+          // Calculate how much text we can add
+          const remainingLength = maxLength - (currentText.length - (endPos - startPos));
+          const textToInsert = paste.substring(0, Math.max(0, remainingLength));
+
+          // Replace the selected text with the truncated paste
+          const newText = currentText.substring(0, startPos) + textToInsert + currentText.substring(endPos);
+          e.target.textContent = newText;
+
+          // Set cursor position after the inserted text
+          const newCursorPos = startPos + textToInsert.length;
+          const newRange = document.createRange();
+          const newSelection = window.getSelection();
+          newRange.setStart(e.target.firstChild || e.target, Math.min(newCursorPos, e.target.textContent.length));
+          newRange.collapse(true);
+          newSelection.removeAllRanges();
+          newSelection.addRange(newRange);
+        }
+
+        observeChanges();
+      });
+
+      titleElement.addEventListener('blur', observeChanges);
+    }
+
+    [dateElement, chapterElement].forEach(element => {
+      if (element) {
+        element.addEventListener('input', observeChanges);
+        element.addEventListener('blur', observeChanges);
+      }
+    });
+  }
+
+  scheduleAutoSave() {
+    // Clear existing timer
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+    }
+
+    // Show unsaved changes immediately
+    this.updateSavingIndicator('unsaved');
+
+    // Schedule new auto-save
+    this.autoSaveTimer = setTimeout(() => {
+      this.performAutoSave();
+    }, this.autoSaveDelay);
+  }
+
+  performAutoSave() {
+    this.updateSavingIndicator('saving');
+
+    try {
+      if (!this.currentArticleId) {
+        // Create new article if none exists
+        this.createNewArticle();
+      } else {
+        // Update existing article
+        this.updateCurrentArticle();
+      }
+      this.updateSavingIndicator('saved');
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      this.updateSavingIndicator('error');
+    }
+  }
+
+  createNewArticle() {
+    const articleData = LocalStorageManager.getCurrentArticleData();
+    this.currentArticleId = LocalStorageManager.saveArticle(articleData);
+    renderSavedArticles(); // Refresh homepage
+    console.log('New article created:', this.currentArticleId);
+  }
+
+  updateCurrentArticle() {
+    if (!this.currentArticleId) return;
+
+    const articleData = LocalStorageManager.getCurrentArticleData();
+    articleData.id = this.currentArticleId;
+    LocalStorageManager.saveArticle(articleData);
+    renderSavedArticles(); // Refresh homepage
+    console.log('Article updated:', this.currentArticleId);
+  }
+
+  setCurrentArticleId(id) {
+    this.currentArticleId = id;
+  }
+
+  clearCurrentArticle() {
+    this.currentArticleId = null;
+    this.updateSavingIndicator('saved');
+  }
+
+  updateSavingIndicator(state) {
+    if (!this.savingIndicator || !this.savingText) return;
+
+    this.savingIndicator.className = `saving-indicator ${state}`;
+
+    switch (state) {
+      case 'saving':
+        this.savingText.textContent = 'Saving...';
+        break;
+      case 'saved':
+        this.savingText.textContent = 'Saved';
+        this.hasUnsavedChanges = false;
+        break;
+      case 'unsaved':
+        this.savingText.textContent = 'Unsaved changes';
+        this.hasUnsavedChanges = true;
+        break;
+      case 'error':
+        this.savingText.textContent = 'Save failed';
+        break;
+    }
   }
 
   setupComponentButtonListeners() {
@@ -137,17 +307,23 @@ class ArticleBuilder {
       element.classList.add('builder-component');
 
       this.content.appendChild(element);
-      
-      // Focus the new component if it's contentEditable
-      if (element.contentEditable === 'true') {
-        element.focus();
-      } else {
-        // For complex components, find the first contentEditable element
-        const firstEditable = element.querySelector('[contenteditable="true"]');
-        if (firstEditable) {
-          firstEditable.focus();
+
+      // Use requestAnimationFrame to ensure DOM is ready before selecting
+      requestAnimationFrame(() => {
+        // Select the newly created component
+        this.selectedComponent = id;
+
+        // Focus the new component if it's contentEditable
+        if (element.contentEditable === 'true') {
+          element.focus();
+        } else {
+          // For complex components, find the first contentEditable element
+          const firstEditable = element.querySelector('[contenteditable="true"]');
+          if (firstEditable) {
+            firstEditable.focus();
+          }
         }
-      }
+      });
     }
   }
 
@@ -473,10 +649,74 @@ class ArticleBuilder {
   }
 }
 
+// ===== LOCAL STORAGE UTILITIES =====
+const LocalStorageManager = {
+  STORAGE_KEY: 'saved_articles',
+
+  saveArticle(articleData) {
+    const articles = this.getAllArticles();
+    const articleId = articleData.id || this.generateId();
+
+    const article = {
+      id: articleId,
+      title: articleData.title,
+      date: articleData.date,
+      tag: articleData.tag,
+      content: articleData.content,
+      timestamp: Date.now()
+    };
+
+    articles[articleId] = article;
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(articles));
+    return articleId;
+  },
+
+  getAllArticles() {
+    const stored = localStorage.getItem(this.STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  },
+
+  getArticle(id) {
+    const articles = this.getAllArticles();
+    return articles[id] || null;
+  },
+
+  deleteArticle(id) {
+    const articles = this.getAllArticles();
+    delete articles[id];
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(articles));
+  },
+
+  generateId() {
+    return 'article_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  },
+
+  getCurrentArticleData() {
+    const titleElement = document.querySelector('.article-title');
+    const dateElement = document.querySelector('.article-date');
+    const chapterElement = document.querySelector('.article-chapter');
+
+    const title = titleElement?.textContent?.trim() || 'Untitled Article';
+    const date = dateElement?.textContent?.trim() || new Date().toLocaleDateString();
+    const tag = chapterElement?.textContent?.trim() || 'General';
+    const content = generateMarkdownFromBuilder();
+
+    return { title, date, tag, content };
+  }
+};
+
 // Global navigation functions for builder homepage
 function showBuilderHomepage() {
+  // Save current article before navigating away
+  if (window.articleBuilderInstance && window.articleBuilderInstance.hasUnsavedChanges) {
+    window.articleBuilderInstance.performAutoSave();
+  }
+
   document.getElementById('builder-homepage').style.display = 'block';
   document.getElementById('article-editor').style.display = 'none';
+
+  // Refresh the articles list when returning to homepage
+  renderSavedArticles();
 }
 
 function showArticleEditor() {
@@ -489,15 +729,15 @@ function exportArticle() {
   const titleElement = document.querySelector('.article-title');
   const chapterElement = document.querySelector('.article-chapter');
   const dateElement = document.querySelector('.article-date');
-  
+
   let markdown = '';
-  
+
   // Add YAML front matter if title exists
   const title = titleElement?.textContent?.trim();
   const chapter = chapterElement?.textContent?.trim();
   const date = dateElement?.textContent?.trim();
-  
-  if (title && title !== 'Article Title') {
+
+  if (title && title !== 'Untitled Article') {
     markdown += '---\n';
     markdown += `title: ${title}\n`;
     if (date && date !== 'Dec 25, 2024') {
@@ -508,10 +748,10 @@ function exportArticle() {
     }
     markdown += '---\n\n';
   }
-  
+
   // Convert each component to markdown
   const components = outputContainer.querySelectorAll('.builder-component');
-  
+
   components.forEach((component, index) => {
     const componentMarkdown = convertComponentToMarkdown(component);
     if (componentMarkdown) {
@@ -522,7 +762,7 @@ function exportArticle() {
       }
     }
   });
-  
+
   // Create and download the file
   const blob = new Blob([markdown], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);
@@ -535,6 +775,117 @@ function exportArticle() {
   URL.revokeObjectURL(url);
 }
 
+function loadArticle(articleId) {
+  const article = LocalStorageManager.getArticle(articleId);
+  if (!article) {
+    alert('Article not found!');
+    return;
+  }
+
+  // Clear current content
+  document.getElementById('markdown-output').innerHTML = '';
+
+  // Set title, date, and tag
+  const titleElement = document.querySelector('.article-title');
+  const dateElement = document.querySelector('.article-date');
+  const chapterElement = document.querySelector('.article-chapter');
+
+  if (titleElement) titleElement.textContent = article.title;
+  if (dateElement) dateElement.textContent = article.date;
+  if (chapterElement) chapterElement.textContent = article.tag;
+
+  // Load content
+  if (article.content) {
+    importMarkdownToBuilder(article.content);
+  }
+
+  // Set the current article ID for auto-save
+  if (window.articleBuilderInstance) {
+    window.articleBuilderInstance.setCurrentArticleId(articleId);
+    window.articleBuilderInstance.updateSavingIndicator('saved');
+  }
+
+  console.log('Article loaded:', article.title);
+}
+
+function createNewArticle() {
+  // Clear the editor for a new article
+  document.getElementById('markdown-output').innerHTML = '';
+
+  // Reset title, date, and tag to defaults
+  const titleElement = document.querySelector('.article-title');
+  const dateElement = document.querySelector('.article-date');
+  const chapterElement = document.querySelector('.article-chapter');
+
+  if (titleElement) titleElement.textContent = 'Untitled Article';
+  if (dateElement) dateElement.textContent = new Date().toLocaleDateString();
+  if (chapterElement) chapterElement.textContent = 'Chapter';
+
+  // Clear the current article ID so auto-save creates a new one
+  if (window.articleBuilderInstance) {
+    window.articleBuilderInstance.clearCurrentArticle();
+    window.articleBuilderInstance.updateSavingIndicator('saved');
+  }
+
+  console.log('New article created');
+}
+
+function renderSavedArticles() {
+  const articles = LocalStorageManager.getAllArticles();
+  const articlesContainer = document.getElementById('articles-list');
+
+  if (!articlesContainer) return;
+
+  // Clear existing content
+  articlesContainer.innerHTML = '';
+
+  const articleIds = Object.keys(articles).sort((a, b) => articles[b].timestamp - articles[a].timestamp);
+
+  if (articleIds.length === 0) {
+    articlesContainer.innerHTML = '<div class="no-articles">No saved articles yet. Create your first article!</div>';
+    return;
+  }
+
+  articleIds.forEach(id => {
+    const article = articles[id];
+    const articleCard = document.createElement('div');
+    articleCard.className = 'article-card';
+    articleCard.style.cursor = 'pointer';
+    articleCard.onclick = () => loadSavedArticle(id);
+    articleCard.innerHTML = `
+      <div class="article-row">
+        <div class="article-info">
+          <h3>${article.title}</h3>
+          <span class="article-tag">${article.tag}</span>
+        </div>
+        <div class="article-actions">
+          <span class="article-date">${article.date}</span>
+          <div class="article-card-actions">
+            <button class="delete-btn" onclick="event.stopPropagation(); deleteSavedArticle('${id}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+    articlesContainer.appendChild(articleCard);
+  });
+}
+
+function loadSavedArticle(articleId) {
+  showArticleEditor();
+  if (!window.articleBuilderInstance) {
+    window.articleBuilderInstance = new ArticleBuilder();
+  }
+  loadArticle(articleId);
+}
+
+function deleteSavedArticle(articleId) {
+  const article = LocalStorageManager.getArticle(articleId);
+  if (article && confirm(`Are you sure you want to delete "${article.title}"?`)) {
+    LocalStorageManager.deleteArticle(articleId);
+    renderSavedArticles();
+  }
+}
+
 function clearAll() {
   if (confirm('Are you sure you want to clear all content?')) {
     document.getElementById('markdown-output').innerHTML = '';
@@ -545,9 +896,9 @@ function clearAll() {
 function convertComponentToMarkdown(component) {
   const className = component.className;
   const content = component.textContent.trim();
-  
+
   if (!content) return '';
-  
+
   // Handle different component types
   if (className.includes('article-header')) {
     return `# ${convertHtmlToMarkdown(component.innerHTML)}`;
@@ -569,7 +920,7 @@ function convertComponentToMarkdown(component) {
   } else if (className.includes('article-paragraph')) {
     return convertHtmlToMarkdown(component.innerHTML);
   }
-  
+
   // Default to paragraph if unknown type
   return convertHtmlToMarkdown(component.innerHTML);
 }
@@ -600,10 +951,10 @@ function convertHtmlToMarkdown(html) {
 function convertListToMarkdown(listComponent) {
   const list = listComponent.querySelector('ol, ul');
   if (!list) return '';
-  
+
   const isOrdered = list.tagName === 'OL';
   const items = list.querySelectorAll('li');
-  
+
   return Array.from(items).map((item, index) => {
     const content = convertHtmlToMarkdown(item.innerHTML);
     if (isOrdered) {
@@ -617,50 +968,50 @@ function convertListToMarkdown(listComponent) {
 function convertTableToMarkdown(tableComponent) {
   const table = tableComponent.querySelector('table');
   if (!table) return '';
-  
+
   const thead = table.querySelector('thead');
   const tbody = table.querySelector('tbody');
-  
+
   let markdown = '';
-  
+
   // Header row
   if (thead) {
     const headerCells = thead.querySelectorAll('th');
-    const headerRow = Array.from(headerCells).map(cell => 
+    const headerRow = Array.from(headerCells).map(cell =>
       convertHtmlToMarkdown(cell.innerHTML)
     ).join(' | ');
     markdown += `| ${headerRow} |\n`;
-    
+
     // Separator row
     const separatorRow = Array.from(headerCells).map(() => '---').join(' | ');
     markdown += `| ${separatorRow} |\n`;
   }
-  
+
   // Data rows
   if (tbody) {
     const rows = tbody.querySelectorAll('tr');
     Array.from(rows).forEach(row => {
       const cells = row.querySelectorAll('td');
-      const rowContent = Array.from(cells).map(cell => 
+      const rowContent = Array.from(cells).map(cell =>
         convertHtmlToMarkdown(cell.innerHTML)
       ).join(' | ');
       markdown += `| ${rowContent} |\n`;
     });
   }
-  
+
   return markdown.trim();
 }
 
 function extractMathFromDisplay(mathElement) {
   // Try to extract LaTeX from various possible formats
   const text = mathElement.textContent || mathElement.innerHTML;
-  
+
   // If it's already wrapped in $$, extract content
   const dollarMatch = text.match(/\$\$(.*?)\$\$/s);
   if (dollarMatch) {
     return dollarMatch[1].trim();
   }
-  
+
   // Return as-is if no $$ wrapper found
   return text.trim();
 }
@@ -672,15 +1023,15 @@ function generateMarkdownFromBuilder() {
   const titleElement = document.querySelector('.article-title');
   const chapterElement = document.querySelector('.article-chapter');
   const dateElement = document.querySelector('.article-date');
-  
+
   let markdown = '';
-  
+
   // Add YAML front matter if title exists
   const title = titleElement?.textContent?.trim();
   const chapter = chapterElement?.textContent?.trim();
   const date = dateElement?.textContent?.trim();
-  
-  if (title && title !== 'Article Title') {
+
+  if (title && title !== 'Untitled Article') {
     markdown += '---\n';
     markdown += `title: ${title}\n`;
     if (date && date !== 'Dec 25, 2024') {
@@ -691,10 +1042,10 @@ function generateMarkdownFromBuilder() {
     }
     markdown += '---\n\n';
   }
-  
+
   // Convert each component to markdown
   const components = outputContainer.querySelectorAll('.builder-component');
-  
+
   components.forEach((component, index) => {
     const componentMarkdown = convertComponentToMarkdown(component);
     if (componentMarkdown) {
@@ -705,24 +1056,24 @@ function generateMarkdownFromBuilder() {
       }
     }
   });
-  
+
   return markdown;
 }
 
 function importMarkdownToBuilder(markdown) {
   const outputContainer = document.getElementById('markdown-output');
   outputContainer.innerHTML = '';
-  
+
   // Extract metadata if present (YAML front matter)
   let content = markdown;
   let metadata = {};
-  
+
   if (markdown.startsWith('---')) {
     const yamlEnd = markdown.indexOf('---', 3);
     if (yamlEnd !== -1) {
       const yamlContent = markdown.substring(3, yamlEnd).trim();
       content = markdown.substring(yamlEnd + 3).trim();
-      
+
       // Simple YAML parser for title and date
       yamlContent.split('\n').forEach(line => {
         const [key, ...valueParts] = line.split(':');
@@ -733,24 +1084,24 @@ function importMarkdownToBuilder(markdown) {
       });
     }
   }
-  
+
   // Note: Title and date are not imported - user can add them manually later
-  
+
   // First, handle math blocks that might span multiple paragraphs
   // Use a more robust regex to handle multiline math blocks
   content = content.replace(/\$\$\s*\n?([\s\S]*?)\n?\s*\$\$/g, (_, mathContent) => {
     return `MATHBLOCK:${mathContent.trim()}:MATHBLOCK`;
   });
-  
+
   // Split content into blocks, but also handle MATHBLOCK markers specially
   let rawBlocks = content.split(/\n\s*\n/).filter(block => block.trim());
-  
+
   // Process blocks to separate math blocks that might be mixed with text
   const blocks = [];
   rawBlocks.forEach(block => {
     const trimmedBlock = block.trim();
     if (!trimmedBlock) return;
-    
+
     // Check if this block contains MATHBLOCK markers mixed with other content
     if (trimmedBlock.includes('MATHBLOCK:') && trimmedBlock.includes(':MATHBLOCK')) {
       // Split on MATHBLOCK markers to separate them
@@ -765,16 +1116,16 @@ function importMarkdownToBuilder(markdown) {
       blocks.push(trimmedBlock);
     }
   });
-  
+
   let componentCounter = 0;
-  
+
   blocks.forEach(block => {
     const trimmedBlock = block.trim();
     if (!trimmedBlock) return;
-    
+
     let element = null;
     const id = `component-${++componentCounter}`;
-    
+
     // Headers
     if (trimmedBlock.startsWith('### ')) {
       element = createBuilderComponent('subsubheader', trimmedBlock.substring(4));
@@ -785,7 +1136,7 @@ function importMarkdownToBuilder(markdown) {
     }
     // Blockquote
     else if (trimmedBlock.startsWith('> ')) {
-      const quoteText = trimmedBlock.split('\n').map(line => 
+      const quoteText = trimmedBlock.split('\n').map(line =>
         line.startsWith('> ') ? line.substring(2) : line
       ).join('\n');
       element = createBuilderComponent('blockquote', quoteText);
@@ -809,7 +1160,7 @@ function importMarkdownToBuilder(markdown) {
     else {
       element = createBuilderComponent('paragraph', trimmedBlock);
     }
-    
+
     if (element) {
       element.id = id;
       element.classList.add('builder-component');
@@ -821,12 +1172,12 @@ function importMarkdownToBuilder(markdown) {
 function createBuilderComponent(type, content) {
   const config = COMPONENT_TYPES[type];
   if (!config) return null;
-  
+
   const element = document.createElement(config.tag);
   element.className = config.className;
   element.contentEditable = true;
   element.setAttribute('data-placeholder', config.placeholder);
-  
+
   if (content) {
     if (type === 'math') {
       // For math components, store the raw LaTeX and render it
@@ -844,7 +1195,7 @@ function createBuilderComponent(type, content) {
       element.innerHTML = htmlContent;
     }
   }
-  
+
   return element;
 }
 
@@ -863,15 +1214,15 @@ function convertMarkdownToHtml(text) {
 function createBuilderList(listType, content) {
   const wrapper = document.createElement('div');
   wrapper.className = 'article-list';
-  
+
   const list = document.createElement(listType);
   const lines = content.split('\n').filter(line => line.trim());
-  
+
   lines.forEach(line => {
-    const match = listType === 'ol' ? 
-      line.match(/^\s*\d+\.\s+(.*)$/) : 
+    const match = listType === 'ol' ?
+      line.match(/^\s*\d+\.\s+(.*)$/) :
       line.match(/^\s*[-*+]\s+(.*)$/);
-    
+
     if (match) {
       const li = document.createElement('li');
       li.contentEditable = true;
@@ -880,7 +1231,7 @@ function createBuilderList(listType, content) {
       list.appendChild(li);
     }
   });
-  
+
   wrapper.appendChild(list);
   return wrapper;
 }
@@ -888,15 +1239,15 @@ function createBuilderList(listType, content) {
 function createBuilderTable(content) {
   const wrapper = document.createElement('div');
   wrapper.className = 'article-table';
-  
+
   const table = document.createElement('table');
   const lines = content.split('\n').filter(line => line.trim());
-  
+
   // Parse headers
   const headerCells = lines[0].split('|').slice(1, -1).map(cell => cell.trim());
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
-  
+
   headerCells.forEach(headerText => {
     const th = document.createElement('th');
     th.contentEditable = true;
@@ -905,13 +1256,13 @@ function createBuilderTable(content) {
     headerRow.appendChild(th);
   });
   thead.appendChild(headerRow);
-  
+
   // Parse data rows (skip separator line)
   const tbody = document.createElement('tbody');
   lines.slice(2).forEach(line => {
     const cells = line.split('|').slice(1, -1).map(cell => cell.trim());
     const row = document.createElement('tr');
-    
+
     cells.forEach(cellText => {
       const td = document.createElement('td');
       td.contentEditable = true;
@@ -921,7 +1272,7 @@ function createBuilderTable(content) {
     });
     tbody.appendChild(row);
   });
-  
+
   table.appendChild(thead);
   table.appendChild(tbody);
   wrapper.appendChild(table);
@@ -929,14 +1280,16 @@ function createBuilderTable(content) {
 }
 
 function setEditMode(isEditMode) {
+  const articleEditor = document.getElementById('article-editor');
   const outputContainer = document.getElementById('markdown-output');
   const componentButtons = document.querySelector('.component-buttons');
-  
+
   if (isEditMode) {
     // Enable edit mode
+    articleEditor.classList.remove('preview-mode');
     outputContainer.classList.remove('preview-mode');
     if (componentButtons) componentButtons.style.display = 'block';
-    
+
     // Make all elements contentEditable
     outputContainer.querySelectorAll('[contenteditable]').forEach(el => {
       el.contentEditable = true;
@@ -946,9 +1299,10 @@ function setEditMode(isEditMode) {
     });
   } else {
     // Enable preview mode
+    articleEditor.classList.add('preview-mode');
     outputContainer.classList.add('preview-mode');
     if (componentButtons) componentButtons.style.display = 'none';
-    
+
     // Disable contentEditable
     outputContainer.querySelectorAll('[contenteditable]').forEach(el => {
       el.contentEditable = false;
@@ -966,6 +1320,9 @@ document.addEventListener('DOMContentLoaded', () => {
     new ArticleBuilder();
   }
 
+  // Load saved articles on homepage
+  renderSavedArticles();
+
   // Setup homepage button listeners
   const newArticleBtn = document.getElementById('new-article-btn');
   if (newArticleBtn) {
@@ -975,6 +1332,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!window.articleBuilderInstance) {
         window.articleBuilderInstance = new ArticleBuilder();
       }
+      // Create a new article
+      createNewArticle();
     });
   }
 
@@ -986,11 +1345,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const reader = new FileReader();
         reader.onload = (event) => {
           const markdown = event.target.result;
-          importMarkdownToBuilder(markdown);
           showArticleEditor();
           if (!window.articleBuilderInstance) {
             window.articleBuilderInstance = new ArticleBuilder();
           }
+          // Clear current article ID to create new article from import
+          window.articleBuilderInstance.clearCurrentArticle();
+          importMarkdownToBuilder(markdown);
         };
         reader.readAsText(file);
       }
@@ -1000,37 +1361,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // Setup mode toggle listeners
   const editModeBtn = document.getElementById('edit-mode-btn');
   const previewModeBtn = document.getElementById('preview-mode-btn');
-  
+
   if (editModeBtn && previewModeBtn) {
     editModeBtn.addEventListener('click', () => {
       editModeBtn.classList.add('active');
       previewModeBtn.classList.remove('active');
       setEditMode(true);
     });
-    
+
     previewModeBtn.addEventListener('click', () => {
       previewModeBtn.classList.add('active');
       editModeBtn.classList.remove('active');
       setEditMode(false);
     });
   }
-
-  // Setup article card listeners
-  document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('edit-btn')) {
-      showArticleEditor();
-      if (!window.articleBuilderInstance) {
-        window.articleBuilderInstance = new ArticleBuilder();
-      }
-      console.log('Edit article functionality to be implemented');
-    }
-    
-    if (e.target.classList.contains('delete-btn') && e.target.closest('.article-card')) {
-      if (confirm('Are you sure you want to delete this article?')) {
-        e.target.closest('.article-card').remove();
-        console.log('Delete article functionality to be implemented');
-      }
-    }
-  });
 
 });
