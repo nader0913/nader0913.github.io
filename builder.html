@@ -14,53 +14,28 @@
 <body>
     <!-- Builder Homepage -->
     <div id="builder-homepage" style="display: block;">
-        <div class="builder-header">
-            <h1>Article Builder</h1>
-        </div>
-        
-        <div class="builder-actions">
-            <button id="new-article-btn" class="builder-primary-btn">
-                <span class="btn-icon">+</span>
-                New Article
-            </button>
-            <label for="import-md-input" class="builder-secondary-btn">
-                <span class="btn-icon">📁</span>
-                Import Markdown
-                <input type="file" id="import-md-input" accept=".md,.markdown,.txt" style="display: none;">
-            </label>
-        </div>
-        
-        <div class="articles-section">
-            <h2>Your Articles</h2>
-            <div id="articles-list" class="articles-grid">
-                <!-- Sample articles for demonstration -->
-                <div class="article-card">
-                    <div class="article-row">
-                        <div class="article-info">
-                            <h3>Sample Article 1</h3>
-                        </div>
-                        <div class="article-actions">
-                            <span class="article-date">Dec 25, 2024</span>
-                            <div class="article-card-actions">
-                                <button class="edit-btn">Edit</button>
-                                <button class="delete-btn">Delete</button>
-                            </div>
-                        </div>
+        <div class="builder-container">
+            <div class="builder-header">
+                <h1>Article Builder</h1>
+            </div>
+            
+            <div class="articles-section">
+                <div class="articles-header">
+                    <h2>Your Articles</h2>
+                    <div class="articles-actions">
+                        <button id="new-article-btn" class="action-button primary">
+                            <span class="btn-icon">+</span>
+                            New Article
+                        </button>
+                        <label for="import-md-input" class="action-button secondary">
+                            <span class="btn-icon">↗</span>
+                            Import Markdown
+                            <input type="file" id="import-md-input" accept=".md,.markdown,.txt" style="display: none;">
+                        </label>
                     </div>
                 </div>
-                <div class="article-card">
-                    <div class="article-row">
-                        <div class="article-info">
-                            <h3>Another Article</h3>
-                        </div>
-                        <div class="article-actions">
-                            <span class="article-date">Dec 20, 2024</span>
-                            <div class="article-card-actions">
-                                <button class="edit-btn">Edit</button>
-                                <button class="delete-btn">Delete</button>
-                            </div>
-                        </div>
-                    </div>
+                <div id="articles-list" class="articles-grid">
+                    <!-- Articles will be dynamically loaded from localStorage -->
                 </div>
             </div>
         </div>
@@ -73,13 +48,20 @@
                 <button id="edit-mode-btn" class="mode-btn active">Edit</button>
                 <button id="preview-mode-btn" class="mode-btn">Preview</button>
             </div>
+            <div class="editor-actions">
+                <button onclick="exportArticle()" class="action-btn">Export</button>
+                <button onclick="clearAll()" class="action-btn clear-btn">Clear</button>
+            </div>
+            <div id="saving-indicator" class="saving-indicator">
+                <span class="saving-text">Saved</span>
+            </div>
         </div>
         <div class="article-top-navigation">
             <a href="#" class="back-link" onclick="showBuilderHomepage()">&larr; Back to Articles</a>
             <div class="article-chapter" contenteditable="true" data-placeholder="Chapter">Chapter</div>
             <div class="article-date" contenteditable="true" data-placeholder="Date">Dec 25, 2024</div>
         </div>
-        <div class="article-title" contenteditable="true" data-placeholder="Article Title">Article Title</div>
+        <div class="article-title" contenteditable="true" data-placeholder="Untitled Article">Untitled Article</div>
         <div id="markdown-output"></div>
         
         <!-- Component Buttons -->
@@ -101,10 +83,6 @@
                 <button id="move-up-btn" class="component-btn" title="Move Up">↑</button>
                 <button id="move-down-btn" class="component-btn" title="Move Down">↓</button>
             </div>
-        </div>
-        <div class="article-bottom-navigation">
-            <a href="#" onclick="exportArticle()">&larr; Export</a>
-            <a href="#" onclick="clearAll()">Clear &rarr;</a>
         </div>
     </div>
 
