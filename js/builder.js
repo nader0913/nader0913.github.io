@@ -1,4 +1,4 @@
-const COMPONENT_TYPES = {
+const ARTICLE_COMPONENT_TYPES = {
   paragraph: { tag: 'div', className: 'article-paragraph', placeholder: 'Start writing...' },
   header: { tag: 'div', className: 'article-header', placeholder: 'Header text' },
   subheader: { tag: 'div', className: 'article-subheader', placeholder: 'Subheader text' },
@@ -30,13 +30,13 @@ class ArticleBuilder {
   set selectedComponent(value) {
     this._selectedComponent = value;
     this.updateSelectedComponentStyle();
-    this.updateComponentManagementButtons();
+    this.updateManagementButtonStates();
     this.updateDebugInfo();
   }
 
   init() {
-    this.updateComponentManagementButtons();
-    this.setupComponentButtonListeners();
+    this.updateManagementButtonStates();
+    this.setupComponentToolbarListeners();
     this.setupComponentSelection();
     this.setupPasteHandling();
     this.setupDebugMode();
@@ -84,7 +84,7 @@ class ArticleBuilder {
 
       titleElement.addEventListener('paste', (e) => {
         e.preventDefault();
-        const paste = (e.clipboardData || window.clipboardData).getData('text/plain');
+        const paste = e.clipboardData?.getData('text/plain') || '';
         const currentText = e.target.textContent || '';
         const selection = window.getSelection();
 
@@ -153,7 +153,7 @@ class ArticleBuilder {
       }
       this.updateSavingIndicator('saved');
     } catch (error) {
-      console.error('Auto-save failed:', error);
+      // Silent error handling - show error state but don't log to console
       this.updateSavingIndicator('error');
     }
   }
@@ -162,7 +162,6 @@ class ArticleBuilder {
     const articleData = LocalStorageManager.getCurrentArticleData();
     this.currentArticleId = LocalStorageManager.saveArticle(articleData);
     renderSavedArticles(); // Refresh homepage
-    console.log('New article created:', this.currentArticleId);
   }
 
   updateCurrentArticle() {
@@ -172,7 +171,6 @@ class ArticleBuilder {
     articleData.id = this.currentArticleId;
     LocalStorageManager.saveArticle(articleData);
     renderSavedArticles(); // Refresh homepage
-    console.log('Article updated:', this.currentArticleId);
   }
 
   setCurrentArticleId(id) {
@@ -207,7 +205,7 @@ class ArticleBuilder {
     }
   }
 
-  setupComponentButtonListeners() {
+  setupComponentToolbarListeners() {
     document.querySelectorAll('.component-btn[data-component]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const component = e.currentTarget.dataset.component;
@@ -259,7 +257,7 @@ class ArticleBuilder {
     document.addEventListener('paste', (e) => {
       if (e.target.isContentEditable) {
         e.preventDefault();
-        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+        const text = e.clipboardData?.getData('text/plain') || '';
         const selection = window.getSelection();
         if (selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
@@ -328,7 +326,7 @@ class ArticleBuilder {
   }
 
   createSimpleComponent(type) {
-    const config = COMPONENT_TYPES[type];
+    const config = ARTICLE_COMPONENT_TYPES[type];
     if (!config) return null;
 
     const element = document.createElement(config.tag);
@@ -432,7 +430,7 @@ class ArticleBuilder {
     caption.style.display = 'none';
 
     button.addEventListener('click', () => {
-      const url = prompt('Enter image URL:', '');
+      const url = prompt('Enter image URL:') || '';
       if (url && url.trim()) {
         img.src = url.trim();
         img.style.display = 'block';
@@ -526,7 +524,7 @@ class ArticleBuilder {
     }
   }
 
-  updateComponentManagementButtons() {
+  updateManagementButtonStates() {
     const deleteBtn = document.getElementById('delete-btn');
     const moveUpBtn = document.getElementById('move-up-btn');
     const moveDownBtn = document.getElementById('move-down-btn');
@@ -636,7 +634,7 @@ class ArticleBuilder {
   createLink() {
     const selection = window.getSelection();
     if (selection.rangeCount > 0 && !selection.isCollapsed) {
-      const url = prompt('Enter URL:', 'https://');
+      const url = prompt('Enter URL:') || '';
       if (url && url.trim()) {
         const range = selection.getRangeAt(0);
         const selectedText = range.extractContents();
@@ -688,7 +686,7 @@ const LocalStorageManager = {
   },
 
   generateId() {
-    return 'article_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    return 'article_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
   },
 
   getCurrentArticleData() {
@@ -778,7 +776,7 @@ function exportArticle() {
 function loadArticle(articleId) {
   const article = LocalStorageManager.getArticle(articleId);
   if (!article) {
-    alert('Article not found!');
+    console.warn('Article not found with ID:', articleId);
     return;
   }
 
@@ -805,7 +803,7 @@ function loadArticle(articleId) {
     window.articleBuilderInstance.updateSavingIndicator('saved');
   }
 
-  console.log('Article loaded:', article.title);
+  // Article loaded successfully
 }
 
 function createNewArticle() {
@@ -827,7 +825,7 @@ function createNewArticle() {
     window.articleBuilderInstance.updateSavingIndicator('saved');
   }
 
-  console.log('New article created');
+  // New article created successfully
 }
 
 function renderSavedArticles() {
@@ -889,7 +887,7 @@ function deleteSavedArticle(articleId) {
 function clearAll() {
   if (confirm('Are you sure you want to clear all content?')) {
     document.getElementById('markdown-output').innerHTML = '';
-    console.log('Article cleared');
+    // Article content cleared
   }
 }
 
