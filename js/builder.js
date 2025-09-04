@@ -1286,7 +1286,7 @@ function setEditMode(isEditMode) {
     // Enable edit mode
     articleEditor.classList.remove('preview-mode');
     outputContainer.classList.remove('preview-mode');
-    if (componentButtons) componentButtons.style.display = 'block';
+    if (componentButtons) componentButtons.style.display = 'flex';
 
     // Make all elements contentEditable
     outputContainer.querySelectorAll('[contenteditable]').forEach(el => {

@@ -234,6 +234,12 @@ a:hover {
   color: #666;
 }
 
+@media (max-width: 1366px) {
+  body {
+    width: 700px;
+  }
+}
+
 @media (max-width: 768px) {
   body {
     width: 100%;
