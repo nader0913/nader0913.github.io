@@ -11,17 +11,7 @@ body {
   padding: 1em 0;
 }
 
-#main-nav {
-  display: flex;
-  justify-content: center;
-  gap: 2em;
-  margin-bottom: 1.5em;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 0.8em;
-}
-
-#main-page,
-#projects-list {
+#main-page {
   width: 100%;
   margin-top: 2em;
   padding: 0;
@@ -51,113 +41,6 @@ body {
   text-transform: none;
   letter-spacing: 0;
   border-bottom: none;
-}
-
-.nav-item {
-  font-size: 1em;
-  color: #333;
-  text-decoration: none;
-  font-weight: normal;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 0.3em 0;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.nav-item:hover,
-.nav-item.active {
-  color: #000;
-  border-bottom-color: #000;
-}
-
-.cv-content {
-  width: 100%;
-  margin: 0;
-  box-sizing: border-box;
-  line-height: 1.4;
-}
-
-.cv-intro {
-  margin-bottom: 2em;
-}
-
-.cv-intro p {
-  color: #444;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.cv-timeline {
-  position: relative;
-  margin-bottom: 1.5em;
-}
-
-.cv-timeline::before {
-  content: '';
-  position: absolute;
-  left: 50px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background-color: #ddd;
-}
-
-.cv-item {
-  display: flex;
-  margin-bottom: 1.2em;
-  position: relative;
-}
-
-.cv-item::before {
-  content: '';
-  position: absolute;
-  left: 48px;
-  top: 0.3em;
-  width: 6px;
-  height: 6px;
-  background-color: #333;
-  border-radius: 50%;
-  z-index: 1;
-}
-
-.cv-year {
-  width: 40px;
-  font-weight: bold;
-  font-size: 0.9em;
-  color: #333;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.cv-details {
-  flex: 1;
-  padding-left: 1.5em;
-}
-
-.cv-role {
-  font-weight: bold;
-  color: #000;
-  margin-bottom: 0.2em;
-}
-
-.cv-location {
-  font-size: 0.85em;
-  color: #666;
-  margin-bottom: 0.3em;
-}
-
-.cv-desc {
-  font-size: 0.9em;
-  color: #444;
-  line-height: 1.3;
-  margin: 0;
-  padding-left: 1em;
-}
-
-.cv-desc li {
-  margin: 0.2em 0;
-  line-height: 1.4;
 }
 
 .page-content {
@@ -238,22 +121,11 @@ a:hover {
     margin-top: 1em;
   }
 
-
-  #main-nav {
-    gap: 1.5em;
-    margin-bottom: 1em;
-  }
-
-  .nav-item {
-    font-size: 0.9em;
-  }
-
   .toc-entry {
     font-size: 0.85em;
     padding: 0.3em 0;
     margin-bottom: 0.6em;
   }
-
 
   .toc-meta {
     font-size: 0.75em;

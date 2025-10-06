@@ -8,6 +8,7 @@
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/article.css">
+  <script src="js/main.js"></script>
 </head>
 
 <body>
@@ -15,81 +16,8 @@
     <h1>nader0913</h1>
   </div>
 
-  <nav id="main-nav">
-    <a href="#blog" class="nav-item active" onclick="return showPage('blog', this)">Blog</a>
-    <a href="#projects" class="nav-item" onclick="return showPage('projects', this)">Projects</a>
-    <a href="#about" class="nav-item" onclick="return showPage('about', this)">About</a>
-  </nav>
-
-  <div id="blog-page" class="page-content active">
+  <div id="blog-page">
     <div id="main-page"></div>
-  </div>
-
-  <div id="projects-page" class="page-content">
-    <div id="projects-list"></div>
-  </div>
-
-  <div id="about-page" class="page-content">
-    <div class="cv-content">
-      <div class="cv-intro">
-        <p>Software engineer with experience in high-performance systems and cryptographic solutions. Focused on
-          building secure, scalable applications across diverse technology environments.</p>
-      </div>
-
-      <div class="cv-timeline">
-        <div class="cv-item">
-          <div class="cv-year">2025</div>
-          <div class="cv-details">
-            <div class="cv-role">Junior Software Engineer @ Alpitronic</div>
-            <div class="cv-location">Munich, Germany</div>
-            <ul class="cv-desc">
-              <li>Working on OCPP 2.0.1 Certification in C++</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="cv-item">
-          <div class="cv-year">2024</div>
-          <div class="cv-details">
-            <div class="cv-role">Software Engineer Intern @ EcoG</div>
-            <div class="cv-location">Munich, Germany • Mar-Sep</div>
-            <ul class="cv-desc">
-              <li>Developed high throughput solutions for SECC to module communication, including OCMF Meters
-                integration</li>
-              <li>Contributed to OCPP 2.0 Certification process under OCTT framework</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="cv-item">
-          <div class="cv-year">2023</div>
-          <div class="cv-details">
-            <div class="cv-role">Software Engineer Intern @ Arcium</div>
-            <div class="cv-location">Switzerland • Jun-Dec</div>
-            <ul class="cv-desc">
-              <li>Developed MVP integrating SPDZ-based multi-party computation for secure key generation and transaction
-                screening</li>
-              <li>Implemented cryptographic solutions using Zero Knowledge Proofs and Homomorphic Encryption</li>
-              <li>Authored technical blogs on elliptic curves and homomorphic encryption</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="cv-item">
-          <div class="cv-year">2022</div>
-          <div class="cv-details">
-            <div class="cv-role">Software Engineer Intern @ SAP</div>
-            <div class="cv-location">Mougins, France • Jul-Sep</div>
-            <ul class="cv-desc">
-              <li>Built modular email template generator reducing integration time by 50% and eliminating 7000 lines of
-                code</li>
-              <li>Implemented i18n solution for multi-language emails, cutting translation costs by 50%</li>
-              <li>Enhanced UI, implemented caching, and comprehensive testing</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <div id="post-content">
@@ -109,8 +37,6 @@
   <footer id="main-footer">
     <p>Copyright 2025 — Contact: <a href="mailto:nader.business.mail@gmail.com">nader.business.mail@gmail.com</a></p>
   </footer>
-
-  <script src="js/main.js"></script>
 </body>
 
 </html>

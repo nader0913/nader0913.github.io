@@ -6,10 +6,7 @@ const POSTS = [
   { file: 'articles/homomorphic-encryption.md', title: 'Homomorphic Encryption for Dummies', slug: 'homomorphic-encryption', tags: ['Cryptography'], date: 'Nov 12, 2023' },
   { file: 'articles/shamir-secret-sharing.md', title: 'Shamir Secret Sharing', slug: 'shamir-secret-sharing', tags: ['Cryptography'], date: 'Nov 12, 2023' },
   { file: 'articles/plain-english.md', title: 'How to write in Plain English', slug: 'plain-english', tags: ['Writing'], date: 'Aug 19, 2025' },
-];
-
-const PROJECTS = [
-  { file: 'articles/veilcomm.md', title: 'Veilcomm - Partial Tor Network Implementation in Rust', slug: 'veilcomm', tags: ['Privacy', 'Rust'], date: 'Nov, 2024' }
+  { file: 'articles/veilcomm.md', title: 'Veilcomm - Partial Tor Network Implementation in Rust', slug: 'veilcomm', tags: ['Privacy', 'Rust'], date: 'Nov 20, 2024' }
 ];
 
 // ===== STATE =====
@@ -66,46 +63,10 @@ const ContentRenderer = {
 
 // ===== PAGE NAVIGATION =====
 const PageNavigation = {
-  show(pageId, element) {
-    this.hideAllPages();
-    this.clearActiveNav();
-    this.showPage(pageId);
-    this.setActiveNav(element);
-
-    if (pageId === 'projects') {
-      ContentRenderer.renderList(PROJECTS, 'projects-list');
-    }
-    return false;
-  },
-
-  hideAllPages() {
-    DOM.getAll('.page-content').forEach(page => {
-      page.style.display = 'none';
-      page.classList.remove('active');
-    });
-  },
-
-  clearActiveNav() {
-    DOM.getAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-  },
-
-  showPage(pageId) {
-    const page = DOM.get(`${pageId}-page`);
-    if (page) {
-      page.style.display = 'block';
-      page.classList.add('active');
-    }
-  },
-
-  setActiveNav(element) {
-    if (element) element.classList.add('active');
-  },
-
   goBack() {
     DOM.get('post-content').style.display = 'none';
     DOM.get('main-title').style.display = 'block';
-    DOM.get('main-nav').style.display = 'flex';
-    document.querySelector('.page-content.active').style.display = 'block';
+    DOM.get('blog-page').style.display = 'block';
 
     // Update URL to root
     if (window.location.pathname !== '/') {
@@ -128,17 +89,10 @@ const PostLoader = {
   },
 
   findPost(slug) {
-    let item = POSTS.find(p => p.slug === slug);
-    let index = POSTS.indexOf(item);
-    let isProject = false;
+    const item = POSTS.find(p => p.slug === slug);
+    const index = POSTS.indexOf(item);
 
-    if (!item) {
-      item = PROJECTS.find(p => p.slug === slug);
-      index = PROJECTS.indexOf(item);
-      isProject = true;
-    }
-
-    return { item, index, isProject };
+    return { item, index };
   },
 
   displayPost(post, markdown) {
@@ -153,9 +107,8 @@ const PostLoader = {
   },
 
   hideMainUI() {
-    DOM.get('main-nav').style.display = 'none';
     DOM.get('main-title').style.display = 'none';
-    document.querySelector('.page-content.active').style.display = 'none';
+    DOM.get('blog-page').style.display = 'none';
   },
 
   showPostUI() {
@@ -271,7 +224,6 @@ const MarkdownParser = {
 const Router = {
   navigateTo(slug) {
     // Use hash routing for compatibility with simple servers
-    const newUrl = `/#/${slug}`;
     window.location.hash = `#/${slug}`;
     PostLoader.load(slug);
   },
@@ -281,8 +233,8 @@ const Router = {
     const slug = path.replace(/^\/+|\/+$/g, ''); // Remove leading/trailing slashes
 
     if (slug && slug !== '') {
-      // Check if slug exists in posts or projects
-      const postExists = POSTS.some(p => p.slug === slug) || PROJECTS.some(p => p.slug === slug);
+      // Check if slug exists in posts
+      const postExists = POSTS.some(p => p.slug === slug);
 
       if (postExists) {
         PostLoader.load(slug);
@@ -316,10 +268,6 @@ const Router = {
 };
 
 // ===== GLOBAL FUNCTIONS (for inline handlers) =====
-function showPage(pageId, element) {
-  return PageNavigation.show(pageId, element);
-}
-
 function goBack() {
   PageNavigation.goBack();
 }
