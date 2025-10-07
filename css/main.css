@@ -33,11 +33,6 @@ body {
   margin-top: 31px;
 }
 
-.page-content {
-  display: none;
-  width: 100%;
-}
-
 .toc-entry {
   color: rgb(0,0,0.87);
   display: block;

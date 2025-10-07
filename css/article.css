@@ -1,4 +1,5 @@
 .article-top-navigation {
+  font-size: 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -17,9 +18,7 @@
 }
 
 .article-date {
-  font-size: 14px;
   color: rgb(0, 0, 0, 0.6);
-  font-style: italic;
 }
 
 .article-title {
@@ -30,29 +29,30 @@
 }
 
 .article-header {
-  font-size: 24px;
+  font-size: 21px;
   margin-top: 31px;
   padding-bottom: 0.2em;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid rgb(0,0,0,0.38);
   font-weight: bold;
   hyphens: auto;
 }
 
 .article-subheader {
-  font-size: 18px;
+  font-size: 17px;
   margin-top: 1em;
   font-weight: bold;
   hyphens: auto;
 }
 
 .article-subsubheader {
-  font-size: 16px;
+  font-size: 15px;
   margin-top: 1em;
   font-weight: bold;
   hyphens: auto;
 }
 
 .article-paragraph {
+  font-size: 15px;
   margin-top: 1em;
   text-align: justify;
   hyphens: none;
@@ -108,7 +108,6 @@
 
 .article-list {
   margin-top: 1em;
-  padding-left: 0.5em;
   text-align: justify;
 }
 
@@ -171,6 +170,7 @@
   margin: 1em 0;
   padding-top: 1em;
   border-top: 1px solid #ddd;
+  font-size: 14px;
 }
 
 .article-bottom-navigation a {

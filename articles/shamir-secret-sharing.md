@@ -4,7 +4,7 @@ Imagine eleven scientists working on a highly confidential project. They want to
 
 A conventional solution would involve a system of locks and keys, governed by combinatorial principles.
 
-## Number of Locks
+### Number of Locks
 
 The goal is to ensure that the cabinet can be opened only when at least six scientists are present. The number of locks required is calculated based on the possible combinations of scientists who are not present. Since there are 11 scientists and at least 6 must be present to open the cabinet, the calculation considers the combinations of 5 scientists $(11 - 6 = 5)$ who are absent. The formula represents choosing 5 scientists from 11.
 
@@ -14,7 +14,7 @@ $$
 
 Each scientist must have a key to every lock that corresponds to a group of 5 scientists that does not include them. Since each scientist is one of the 11, we consider combinations of 5 scientists out of the remaining 10 to be absent along with them.
 
-## Number of Keys per Scientist
+### Number of Keys per Scientist
 
 $$
 \binom{10}{5} = \frac{10!}{5!(10-5)!} = 252
