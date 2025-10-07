@@ -10,6 +10,7 @@ body {
   margin: 0 auto;
   flex-direction: column;
   padding: 1em 0;
+  box-sizing: border-box;
 }
 
 #main-title {
@@ -73,34 +74,4 @@ a {
 
 a:hover {
   color: #1a4480;
-}
-
-@media (max-width: 1366px) {
-  body {
-    width: 700px;
-  }
-}
-
-@media (max-width: 768px) {
-  body {
-    width: 100%;
-    margin: 0;
-    padding: 1em;
-  }
-
-  #main-page {
-    padding: 0.5em 0;
-    margin-top: 1em;
-  }
-
-  .toc-entry {
-    font-size: 0.85em;
-    padding: 0.3em 0;
-    margin-bottom: 0.6em;
-  }
-
-  .toc-meta {
-    font-size: 0.75em;
-  }
-
 }
