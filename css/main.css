@@ -47,6 +47,10 @@ body {
   border-bottom: 1px dotted #ccc;
 }
 
+.toc-entry:first-child {
+  border-top: 1px dotted #ccc;
+}
+
 .toc-entry:hover {
   color: rgb(0,0,0.87);
   background-color: #f8f8f8;
@@ -74,4 +78,16 @@ a {
 
 a:hover {
   color: #1a4480;
+}
+
+@media (max-width: 1366px) {
+  body {
+    width: 700px;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    width: 100%;
+  }
 }
