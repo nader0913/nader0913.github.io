@@ -6,7 +6,8 @@ const POSTS = [
   { file: 'articles/homomorphic-encryption.md', title: 'Homomorphic Encryption for Dummies', slug: 'homomorphic-encryption', tags: ['Cryptography'], date: 'Nov 12, 2023' },
   { file: 'articles/shamir-secret-sharing.md', title: 'Shamir Secret Sharing', slug: 'shamir-secret-sharing', tags: ['Cryptography'], date: 'Nov 12, 2023' },
   { file: 'articles/plain-english.md', title: 'How to write in Plain English', slug: 'plain-english', tags: ['Writing'], date: 'Aug 19, 2025' },
-  { file: 'articles/veilcomm.md', title: '[Project] Veilcomm - Partial Tor Network Implementation in Rust', slug: 'veilcomm', tags: ['Privacy', 'Rust'], date: 'Nov 20, 2024' }
+  { file: 'articles/veilcomm.md', title: '[Project] Veilcomm - Partial Tor Network Implementation in Rust', slug: 'veilcomm', tags: ['Privacy', 'Rust'], date: 'Nov 20, 2024' },
+  { file: 'articles/code-test.md', title: 'Code Block Testing Article', slug: 'code-test', tags: ['Testing', 'Code'], date: 'Oct 10, 2025' }
 ];
 
 // ===== STATE =====
@@ -116,10 +117,16 @@ const PostLoader = {
   },
 
   setPostContent(post, markdown) {
-    DOM.get('markdown-output').innerHTML = MarkdownParser.parse(markdown);
+    const { html, languages } = toHTML(markdown);
+    DOM.get('markdown-output').innerHTML = html;
     DOM.get('article-chapter').textContent = Array.isArray(post.tags) ? post.tags.join(' • ') : post.tags;
     DOM.get('article-title').textContent = post.title;
     DOM.get('article-date').textContent = post.date || '';
+
+    // Apply syntax highlighting if there are code blocks
+    if (languages.length > 0 && window.Prism) {
+      Prism.highlightAll();
+    }
   },
 
   navigatePost(direction) {
@@ -127,96 +134,6 @@ const PostLoader = {
     if (newIndex >= 0 && newIndex < POSTS.length) {
       Router.navigateTo(POSTS[newIndex].slug);
     }
-  }
-};
-
-// ===== MARKDOWN PARSER =====
-const MarkdownParser = {
-  parse(md) {
-    md = md.replace(/\\\$/g, 'ESCAPED_DOLLAR_SIGN');
-
-    const blocks = md.split(/\n{2,}/).map(block => this.parseBlock(block.trim()));
-
-    let html = blocks.join('\n\n')
-      .replace(/^### (.*$)/gim, '<div class="article-subsubheader">$1</div>')
-      .replace(/^## (.*$)/gim, '<div class="article-subheader">$1</div>')
-      .replace(/^# (.*$)/gim, '<div class="article-header">$1</div>')
-      .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
-      .replace(/\*(.*?)\*/gim, '<i>$1</i>')
-      .replace(/!\[(.*?)\]\((.*?)\)/gim, '<div class="article-image"><img alt="$1" src="$2"><p>$1</p></div>')
-      .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
-      .replace(/^>\s?(.*)$/gim, '<div class="article-blockquote">$1</div>');
-
-    html = html.replace(/\$\$([\s\S]+?)\$\$/g, (_, expr) => `<div class="article-math">$$${expr}$$</div>`);
-    html = html.replace(/\$(.+?)\$/g, (_, expr) => `\\(${expr}\\)`);
-    html = html.replace(/ESCAPED_DOLLAR_SIGN/g, '$');
-
-    if (window.MathJax) {
-      MathJax.typesetPromise([html]).then(() => {
-        DOM.get('markdown-output').innerHTML = html;
-      });
-    }
-
-    return html;
-  },
-
-  parseBlock(block) {
-    if (/^\|.+\n\|[-:| ]+\n?/.test(block)) {
-      return this.parseTable(block);
-    }
-
-    if (/^\s*\d+\.\s+/.test(block)) {
-      return this.parseOrderedList(block);
-    }
-
-    if (/^\s*-\s+/.test(block)) {
-      return this.parseUnorderedList(block);
-    }
-
-    const isSpecialBlock = block.startsWith('> ') || block.startsWith('#') ||
-      block.startsWith('<div') || block.startsWith('<blockquote') ||
-      block.startsWith('<img') || block.startsWith('$$') ||
-      block.includes('![');
-
-    return isSpecialBlock ? block : `<div class="article-paragraph">${block}</div>`;
-  },
-
-  parseOrderedList(block) {
-    const items = block.split('\n')
-      .map(line => {
-        const match = line.match(/^\s*\d+\.\s+(.*)$/);
-        return match ? `<li>${match[1]}</li>` : '';
-      })
-      .join('');
-    return `<div class="article-list"><ol>${items}</ol></div>`;
-  },
-
-  parseUnorderedList(block) {
-    const items = block.split('\n')
-      .map(line => {
-        const match = line.match(/^\s*-\s+(.*)$/);
-        return match ? `<li>${match[1]}</li>` : '';
-      })
-      .join('');
-    return `<div class="article-list"><ul>${items}</ul></div>`;
-  },
-
-  parseTable(tableMd) {
-    const lines = tableMd.trim().split('\n');
-    const headers = lines[0].split('|').slice(1, -1).map(h => h.trim());
-    const rows = lines.slice(2).map(r => r.split('|').slice(1, -1).map(c => c.trim()));
-
-    let html = '<div class="article-table"><table><thead><tr>';
-    headers.forEach(h => html += `<th>${h}</th>`);
-    html += '</tr></thead><tbody>';
-    rows.forEach(cells => {
-      html += '<tr>';
-      cells.forEach(c => html += `<td>${c}</td>`);
-      html += '</tr>';
-    });
-    html += '</tbody></table></div>';
-
-    return html;
   }
 };
 
