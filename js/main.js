@@ -6,8 +6,7 @@ const POSTS = [
   { file: 'articles/homomorphic-encryption.md', title: 'Homomorphic Encryption for Dummies', slug: 'homomorphic-encryption', tags: ['Cryptography'], date: 'Nov 12, 2023' },
   { file: 'articles/shamir-secret-sharing.md', title: 'Shamir Secret Sharing', slug: 'shamir-secret-sharing', tags: ['Cryptography'], date: 'Nov 12, 2023' },
   { file: 'articles/plain-english.md', title: 'How to write in Plain English', slug: 'plain-english', tags: ['Writing'], date: 'Aug 19, 2025' },
-  { file: 'articles/veilcomm.md', title: '[Project] Veilcomm - Partial Tor Network Implementation in Rust', slug: 'veilcomm', tags: ['Privacy', 'Rust'], date: 'Nov 20, 2024' },
-  { file: 'articles/code-test.md', title: 'Code Block Testing Article', slug: 'code-test', tags: ['Testing', 'Code'], date: 'Oct 10, 2025' }
+  { file: 'articles/veilcomm.md', title: '[Project] Veilcomm - Partial Tor Network Implementation in Rust', slug: 'veilcomm', tags: ['Privacy', 'Rust'], date: 'Nov 20, 2024' }
 ];
 
 // ===== STATE =====
