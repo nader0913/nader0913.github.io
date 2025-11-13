@@ -1,10 +1,10 @@
 const ARTICLE_COMPONENT_TYPES = {
-  paragraph: { tag: 'div', className: 'article-paragraph', placeholder: 'Start writing...' },
-  header: { tag: 'div', className: 'article-header', placeholder: 'Header text' },
-  subheader: { tag: 'div', className: 'article-subheader', placeholder: 'Subheader text' },
-  subsubheader: { tag: 'div', className: 'article-subsubheader', placeholder: 'Subsubheader text' },
-  blockquote: { tag: 'div', className: 'article-blockquote', placeholder: 'Quote text...' },
-  math: { tag: 'div', className: 'article-math', placeholder: 'Enter LaTeX: x^2 + y^2 = r^2' }
+  paragraph: { tag: 'p', className: '', placeholder: 'Start writing...' },
+  header: { tag: 'h2', className: '', placeholder: 'Header text' },
+  subheader: { tag: 'h3', className: '', placeholder: 'Subheader text' },
+  subsubheader: { tag: 'h3', className: '', placeholder: 'Subsubheader text' },
+  blockquote: { tag: 'blockquote', className: '', placeholder: 'Quote text...' },
+  math: { tag: 'div', className: '', placeholder: 'Enter LaTeX: x^2 + y^2 = r^2' }
 };
 
 class ArticleBuilder {
@@ -60,7 +60,7 @@ class ArticleBuilder {
     });
 
     // Watch for changes to title, date, and chapter
-    const titleElement = document.querySelector('.article-title');
+    const titleElement = document.querySelector('h1');
     const dateElement = document.querySelector('.article-date');
     const chapterElement = document.querySelector('.article-chapter');
 
@@ -175,10 +175,15 @@ class ArticleBuilder {
 
   setCurrentArticleId(id) {
     this.currentArticleId = id;
+    // Persist the current article ID to localStorage
+    if (id) {
+      localStorage.setItem('current_article_id', id);
+    }
   }
 
   clearCurrentArticle() {
     this.currentArticleId = null;
+    localStorage.removeItem('current_article_id');
     this.updateSavingIndicator('saved');
   }
 
@@ -338,23 +343,20 @@ class ArticleBuilder {
 
   createMath() {
     const div = document.createElement('div');
-    div.className = 'article-math';
     div.contentEditable = true;
     div.setAttribute('data-placeholder', 'Enter LaTeX: x^2 + y^2 = r^2');
+    div.setAttribute('type', 'math');
     return div;
   }
 
 
   createList(listType = 'ul') {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'article-list';
-
     const list = document.createElement(listType);
     const li = document.createElement('li');
     li.contentEditable = true;
     li.setAttribute('data-placeholder', 'List item...');
 
-    wrapper.addEventListener('keydown', (e) => {
+    list.addEventListener('keydown', (e) => {
       // When you click on Enter:
       // - If you are in an empty li, then delete the current li and insert new paragraph component.
       // - If you are in a non empty li, then insert new li.
@@ -367,7 +369,7 @@ class ArticleBuilder {
             const id = `component-${++this.componentCounter}`;
             paragraphElement.id = id;
             paragraphElement.classList.add('builder-component');
-            wrapper.parentNode.insertBefore(paragraphElement, wrapper.nextSibling);
+            list.parentNode.insertBefore(paragraphElement, list.nextSibling);
             paragraphElement.focus();
           }
         } else {
@@ -409,13 +411,11 @@ class ArticleBuilder {
     });
 
     list.appendChild(li);
-    wrapper.appendChild(list);
-    return wrapper;
+    return list;
   }
 
   createImage() {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'article-image';
+    const figure = document.createElement('figure');
 
     const button = document.createElement('button');
     button.textContent = 'Insert Image';
@@ -424,7 +424,7 @@ class ArticleBuilder {
     const img = document.createElement('img');
     img.style.display = 'none';
 
-    const caption = document.createElement('p');
+    const caption = document.createElement('figcaption');
     caption.contentEditable = true;
     caption.setAttribute('data-placeholder', 'Image caption...');
     caption.style.display = 'none';
@@ -439,15 +439,15 @@ class ArticleBuilder {
       }
     });
 
-    wrapper.appendChild(button);
-    wrapper.appendChild(img);
-    wrapper.appendChild(caption);
-    return wrapper;
+    figure.appendChild(button);
+    figure.appendChild(img);
+    figure.appendChild(caption);
+    return figure;
   }
 
   createTable() {
     const wrapper = document.createElement('div');
-    wrapper.className = 'article-table';
+    wrapper.className = 'table-wrapper';
 
     const table = document.createElement('table');
 
@@ -499,7 +499,7 @@ class ArticleBuilder {
       currentSelected.classList.remove('selected');
 
       // Render math when unselecting
-      if (currentSelected.classList.contains('article-math')) {
+      if (currentSelected.getAttribute('type') === 'math') {
         const mathText = currentSelected.textContent.trim();
         currentSelected.dataset.mathText = mathText;
         currentSelected.innerHTML = `$$${mathText}$$`;
@@ -516,7 +516,7 @@ class ArticleBuilder {
         selectedElement.classList.add('selected');
 
         // Switch to input mode when selecting math
-        if (selectedElement.classList.contains('article-math')) {
+        if (selectedElement.getAttribute('type') === 'math') {
           selectedElement.innerHTML = '';
           selectedElement.textContent = selectedElement.dataset.mathText;
         }
@@ -603,7 +603,7 @@ class ArticleBuilder {
 
         if (this.content.contains(element)) {
           // Check if the selection is in a formattable element
-          const formattableElement = element.closest('.article-paragraph, .article-blockquote, .article-list li, .article-table td, .article-table th');
+          const formattableElement = element.closest('p, blockquote, ul li, ol li, td, th');
 
           if (formattableElement) {
             const rect = range.getBoundingClientRect();
@@ -690,7 +690,7 @@ const LocalStorageManager = {
   },
 
   getCurrentArticleData() {
-    const titleElement = document.querySelector('.article-title');
+    const titleElement = document.querySelector('h1');
     const dateElement = document.querySelector('.article-date');
     const chapterElement = document.querySelector('.article-chapter');
 
@@ -724,7 +724,7 @@ function showArticleEditor() {
 
 function exportArticle() {
   const outputContainer = document.getElementById('markdown-output');
-  const titleElement = document.querySelector('.article-title');
+  const titleElement = document.querySelector('h1');
   const chapterElement = document.querySelector('.article-chapter');
   const dateElement = document.querySelector('.article-date');
 
@@ -784,7 +784,7 @@ function loadArticle(articleId) {
   document.getElementById('markdown-output').innerHTML = '';
 
   // Set title, date, and tag
-  const titleElement = document.querySelector('.article-title');
+  const titleElement = document.querySelector('h1');
   const dateElement = document.querySelector('.article-date');
   const chapterElement = document.querySelector('.article-chapter');
 
@@ -811,7 +811,7 @@ function createNewArticle() {
   document.getElementById('markdown-output').innerHTML = '';
 
   // Reset title, date, and tag to defaults
-  const titleElement = document.querySelector('.article-title');
+  const titleElement = document.querySelector('h1');
   const dateElement = document.querySelector('.article-date');
   const chapterElement = document.querySelector('.article-chapter');
 
@@ -898,24 +898,23 @@ function convertComponentToMarkdown(component) {
   if (!content) return '';
 
   // Handle different component types
-  if (className.includes('article-header')) {
+  if (component.tagName === 'H2') {
     return `# ${convertHtmlToMarkdown(component.innerHTML)}`;
-  } else if (className.includes('article-subheader')) {
+  } else if (component.tagName === 'H3') {
     return `## ${convertHtmlToMarkdown(component.innerHTML)}`;
-  } else if (className.includes('article-subsubheader')) {
-    return `### ${convertHtmlToMarkdown(component.innerHTML)}`;
-  } else if (className.includes('article-blockquote')) {
+  } else if (component.tagName === 'BLOCKQUOTE') {
     const lines = convertHtmlToMarkdown(component.innerHTML).split('\n');
     return lines.map(line => `> ${line}`).join('\n');
-  } else if (className.includes('article-list')) {
+  } else if (component.tagName === 'UL' || component.tagName === 'OL') {
     return convertListToMarkdown(component);
-  } else if (className.includes('article-table')) {
-    return convertTableToMarkdown(component);
-  } else if (className.includes('article-math')) {
+  } else if (className.includes('table-wrapper')) {
+    const table = component.querySelector('table');
+    return convertTableToMarkdown(table);
+  } else if (component.getAttribute('type') === 'math') {
     // For math components, use the stored LaTeX or extract from display
     const mathText = component.dataset.mathText || extractMathFromDisplay(component);
     return `$$\n${mathText}\n$$`;
-  } else if (className.includes('article-paragraph')) {
+  } else if (component.tagName === 'P') {
     return convertHtmlToMarkdown(component.innerHTML);
   }
 
@@ -946,8 +945,7 @@ function convertHtmlToMarkdown(html) {
     .replace(/&#x2F;/g, '/');
 }
 
-function convertListToMarkdown(listComponent) {
-  const list = listComponent.querySelector('ol, ul');
+function convertListToMarkdown(list) {
   if (!list) return '';
 
   const isOrdered = list.tagName === 'OL';
@@ -963,8 +961,7 @@ function convertListToMarkdown(listComponent) {
   }).join('\n');
 }
 
-function convertTableToMarkdown(tableComponent) {
-  const table = tableComponent.querySelector('table');
+function convertTableToMarkdown(table) {
   if (!table) return '';
 
   const thead = table.querySelector('thead');
@@ -1018,7 +1015,7 @@ function extractMathFromDisplay(mathElement) {
 function generateMarkdownFromBuilder() {
   // This is the same logic as exportArticle but returns the markdown instead of downloading
   const outputContainer = document.getElementById('markdown-output');
-  const titleElement = document.querySelector('.article-title');
+  const titleElement = document.querySelector('h1');
   const chapterElement = document.querySelector('.article-chapter');
   const dateElement = document.querySelector('.article-date');
 
@@ -1125,9 +1122,7 @@ function importMarkdownToBuilder(markdown) {
     const id = `component-${++componentCounter}`;
 
     // Headers
-    if (trimmedBlock.startsWith('### ')) {
-      element = createBuilderComponent('subsubheader', trimmedBlock.substring(4));
-    } else if (trimmedBlock.startsWith('## ')) {
+    if (trimmedBlock.startsWith('## ')) {
       element = createBuilderComponent('subheader', trimmedBlock.substring(3));
     } else if (trimmedBlock.startsWith('# ')) {
       element = createBuilderComponent('header', trimmedBlock.substring(2));
@@ -1168,7 +1163,7 @@ function importMarkdownToBuilder(markdown) {
 }
 
 function createBuilderComponent(type, content) {
-  const config = COMPONENT_TYPES[type];
+  const config = ARTICLE_COMPONENT_TYPES[type];
   if (!config) return null;
 
   const element = document.createElement(config.tag);
@@ -1210,9 +1205,6 @@ function convertMarkdownToHtml(text) {
 }
 
 function createBuilderList(listType, content) {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'article-list';
-
   const list = document.createElement(listType);
   const lines = content.split('\n').filter(line => line.trim());
 
@@ -1230,13 +1222,12 @@ function createBuilderList(listType, content) {
     }
   });
 
-  wrapper.appendChild(list);
-  return wrapper;
+  return list;
 }
 
 function createBuilderTable(content) {
   const wrapper = document.createElement('div');
-  wrapper.className = 'article-table';
+  wrapper.className = 'table-wrapper';
 
   const table = document.createElement('table');
   const lines = content.split('\n').filter(line => line.trim());
@@ -1315,7 +1306,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize ArticleBuilder only when in editor mode
   const articleEditor = document.getElementById('article-editor');
   if (articleEditor && articleEditor.style.display !== 'none') {
-    new ArticleBuilder();
+    window.articleBuilderInstance = new ArticleBuilder();
+
+    // Try to restore the last article being edited
+    const lastArticleId = localStorage.getItem('current_article_id');
+    if (lastArticleId) {
+      loadArticle(lastArticleId);
+    }
   }
 
   // Load saved articles on homepage

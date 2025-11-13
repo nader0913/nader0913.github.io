@@ -1,10 +1,13 @@
 html {
-  height: 100%;
+  width: 100vw;
   flex-direction: column;
 }
 
 body {
-  font-family: Arial;
+  font-family: Garamond, serif;
+  line-height: 1.2;
+  text-align: justify;
+  hyphens: none;
   color: rgb(0,0,0,0.87);
   width: 650px;
   margin: 0 auto;
@@ -13,11 +16,68 @@ body {
   box-sizing: border-box;
 }
 
-#main-title {
+h1 {
   font-size: 28px;
+  margin-bottom: 31px;
   font-weight: bold;
   text-align: center;
-  margin: 1em 0;
+  hyphens: auto;
+}
+
+h2 {
+  border-bottom: 1px solid rgb(0,0,0,0.38);
+  hyphens: auto;
+}
+
+h3 {
+  hyphens: auto;
+}
+
+table {
+  width: 100%;
+  border: 1px solid #ccc;
+  border-collapse: collapse;
+}
+
+th {
+  border: 1px solid #ccc;
+  padding: 0.4em 0.6em;
+  text-align: left;
+  vertical-align: top;
+  background-color: #f9f9f9;
+}
+
+td {
+  border: 1px solid #ccc;
+  padding: 0.4em 0.6em;
+  text-align: left;
+  vertical-align: top;
+}
+
+a {
+  color: #2c5aa0;
+  text-decoration: underline;
+}
+
+a:hover {
+  color: #1a4480;
+}
+
+.article-top-navigation a, 
+.article-bottom-navigation a {
+  color: #2c5aa0;
+  text-decoration: none;
+}
+
+figure img {
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+}
+
+figcaption {
+  font-style: italic;
+  text-align: center;
 }
 
 #main-page {

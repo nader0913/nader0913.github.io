@@ -16,13 +16,13 @@ The Baader-Meinhof phenomenon or frequency illusion is a type of *cognitive bias
 
 There are two key mechanisms involved in the Baader–Meinhof phenomenon:
 
-## 1.Selective attention
+## 1. Selective attention
 
 Our brains input enormous amounts of information from our environment every day. But we don't give them attention equally. If we did, they would be constantly overwhelmed. To be more efficient, our brain selects the most useful information depending on the context or the task at hand and disregards all the information that we don’t need.
 
 Thanks to selective attention, we can focus on what matters, filtering out less important details. For this reason, we tend to notice the things that interest us more i.e. a specific word or car—and ignore the rest.
 
-## 2.Confirmation bias
+## 2. Confirmation bias
 
 Confirmation bias is the tendency to favor information that confirms or strengthens our beliefs and values. It enhances the Baader-Meinhof phenomenon further by making us look for things in our environment that support our preconceived ideas e.g. we seek environmental “proof” that suddenly everyone is driving a Toyota. At the same time, confirmation bias leads us to disregard any information that doesn’t align with those preconceived ideas.
 

@@ -147,7 +147,7 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
-.article-math.selected {
+[type="math"].selected {
   padding: 0.75em 0.5em;
   line-height: 1.5;
 }
