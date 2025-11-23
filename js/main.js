@@ -28,9 +28,7 @@ const DOM = {
 const ContentRenderer = {
   createEntryLink(item) {
     const link = DOM.create('a', 'toc-entry');
-    link.href = `/#/${item.slug}`;
-    link.target = '_blank';
-    link.onclick = this.handleEntryClick(item.slug);
+    link.href = `#${item.slug}`;
 
     const title = DOM.create('span', 'toc-title', item.title);
     const meta = DOM.create('div', 'toc-meta');
@@ -40,16 +38,6 @@ const ContentRenderer = {
     meta.append(tags, date);
     link.append(title, meta);
     return link;
-  },
-
-  handleEntryClick(slug) {
-    return (e) => {
-      if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
-        e.preventDefault();
-        Router.navigateTo(slug);
-        return false;
-      }
-    };
   },
 
   renderList(items, containerId) {
@@ -64,14 +52,7 @@ const ContentRenderer = {
 // ===== PAGE NAVIGATION =====
 const PageNavigation = {
   goBack() {
-    DOM.get('post-content').style.display = 'none';
-    DOM.get('main-title').style.display = 'block';
-    DOM.get('blog-page').style.display = 'block';
-
-    // Update URL to root
-    if (window.location.pathname !== '/') {
-      history.pushState({}, '', '/');
-    }
+    window.location.href = '/';
   }
 };
 
@@ -96,23 +77,12 @@ const PostLoader = {
   },
 
   displayPost(post, markdown) {
-    this.hideMainUI();
-    this.showPostUI();
     this.setPostContent(post, markdown);
     window.scrollTo(0, 0);
 
     if (window.MathJax) {
       MathJax.typesetPromise();
     }
-  },
-
-  hideMainUI() {
-    DOM.get('main-title').style.display = 'none';
-    DOM.get('blog-page').style.display = 'none';
-  },
-
-  showPostUI() {
-    DOM.get('post-content').style.display = 'block';
   },
 
   setPostContent(post, markdown) {
@@ -131,54 +101,37 @@ const PostLoader = {
   navigatePost(direction) {
     const newIndex = currentPostIndex + direction;
     if (newIndex >= 0 && newIndex < POSTS.length) {
-      Router.navigateTo(POSTS[newIndex].slug);
+      window.location.hash = POSTS[newIndex].slug;
     }
   }
 };
 
 // ===== ROUTING =====
 const Router = {
-  navigateTo(slug) {
-    // Use hash routing for compatibility with simple servers
-    window.location.hash = `#/${slug}`;
-    PostLoader.load(slug);
-  },
+  handleHashRoute() {
+    const hash = window.location.hash.replace(/^#\/?/, '');
 
-  handleRoute() {
-    const path = window.location.pathname;
-    const slug = path.replace(/^\/+|\/+$/g, ''); // Remove leading/trailing slashes
-
-    if (slug && slug !== '') {
-      // Check if slug exists in posts
-      const postExists = POSTS.some(p => p.slug === slug);
+    if (hash) {
+      const postExists = POSTS.some(p => p.slug === hash);
 
       if (postExists) {
-        PostLoader.load(slug);
-      } else {
-        // Slug doesn't exist, redirect to home
-        console.warn(`Article "${slug}" not found, redirecting to home`);
-        this.navigateToHome();
+        // Navigate to article page with hash
+        if (!window.location.pathname.includes('article.html')) {
+          window.location.href = `/article.html#${hash}`;
+        } else {
+          PostLoader.load(hash);
+        }
       }
-    } else {
-      // Home page or empty slug
-      this.showHomePage();
     }
   },
 
-  navigateToHome() {
-    history.replaceState({}, '', '/');
-    this.showHomePage();
-  },
+  handleArticlePage() {
+    const hash = window.location.hash.replace(/^#\/?/, '');
 
-  showHomePage() {
-    PageNavigation.goBack();
-  },
-
-  handleHashChange() {
-    // Legacy hash support - redirect to clean URLs
-    const slug = window.location.hash.replace(/^#\/?/, '');
-    if (slug) {
-      this.navigateTo(slug);
+    if (hash) {
+      PostLoader.load(hash);
+    } else {
+      window.location.href = '/';
     }
   }
 };
@@ -197,27 +150,23 @@ function nextPost() {
 }
 
 // ===== INITIALIZATION =====
-window.addEventListener('hashchange', Router.handleHashChange);
-window.addEventListener('popstate', (e) => {
-  if (e.state?.slug) {
-    PostLoader.load(e.state.slug);
+window.addEventListener('hashchange', () => {
+  if (window.location.pathname.includes('article.html')) {
+    Router.handleArticlePage();
   } else {
-    Router.handleRoute();
+    Router.handleHashRoute();
   }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Render blog content first
-  ContentRenderer.renderList(POSTS, 'main-page');
+  const mainPage = DOM.get('main-page');
 
-  // Initialize page visibility
-  DOM.getAll('.page-content').forEach(page => page.style.display = 'none');
-  DOM.get('blog-page').style.display = 'block';
-
-  // Handle initial route - check hash first, then path
-  if (window.location.hash) {
-    Router.handleHashChange();
+  if (mainPage) {
+    // Homepage: render post list
+    ContentRenderer.renderList(POSTS, 'main-page');
+    Router.handleHashRoute();
   } else {
-    Router.handleRoute();
+    // Article page: load post from hash
+    Router.handleArticlePage();
   }
 });

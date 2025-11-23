@@ -1,5 +1,4 @@
 .article-top-navigation {
-  font-size: 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -7,7 +6,6 @@
   padding-bottom: 1em;
   border-bottom: 1px solid #ccc;
 }
-
 
 .article-chapter {
   font-weight: bold;
@@ -51,5 +49,10 @@
   margin: 1em 0;
   padding-top: 1em;
   border-top: 1px solid #ccc;
-  font-size: 14px;
+}
+
+.article-top-navigation a, 
+.article-bottom-navigation a {
+  color: #2c5aa0;
+  text-decoration: none;
 }

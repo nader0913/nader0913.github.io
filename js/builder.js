@@ -82,37 +82,6 @@ class ArticleBuilder {
         observeChanges();
       });
 
-      titleElement.addEventListener('paste', (e) => {
-        e.preventDefault();
-        const paste = e.clipboardData?.getData('text/plain') || '';
-        const currentText = e.target.textContent || '';
-        const selection = window.getSelection();
-
-        if (selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          const startPos = range.startOffset;
-          const endPos = range.endOffset;
-
-          // Calculate how much text we can add
-          const remainingLength = maxLength - (currentText.length - (endPos - startPos));
-          const textToInsert = paste.substring(0, Math.max(0, remainingLength));
-
-          // Replace the selected text with the truncated paste
-          const newText = currentText.substring(0, startPos) + textToInsert + currentText.substring(endPos);
-          e.target.textContent = newText;
-
-          // Set cursor position after the inserted text
-          const newCursorPos = startPos + textToInsert.length;
-          const newRange = document.createRange();
-          const newSelection = window.getSelection();
-          newRange.setStart(e.target.firstChild || e.target, Math.min(newCursorPos, e.target.textContent.length));
-          newRange.collapse(true);
-          newSelection.removeAllRanges();
-          newSelection.addRange(newRange);
-        }
-
-        observeChanges();
-      });
 
       titleElement.addEventListener('blur', observeChanges);
     }
@@ -262,18 +231,15 @@ class ArticleBuilder {
     document.addEventListener('paste', (e) => {
       if (e.target.isContentEditable) {
         e.preventDefault();
+        e.stopPropagation();
         const text = e.clipboardData?.getData('text/plain') || '';
         const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          range.deleteContents();
-          range.insertNode(document.createTextNode(text));
-          range.collapse(false);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        }
+        if (!selection.rangeCount) return;
+        selection.deleteFromDocument();
+        selection.getRangeAt(0).insertNode(document.createTextNode(text));
+        selection.collapseToEnd();
       }
-    });
+    }, true);
   }
 
   addComponent(type) {
@@ -710,16 +676,13 @@ function showBuilderHomepage() {
     window.articleBuilderInstance.performAutoSave();
   }
 
-  document.getElementById('builder-homepage').style.display = 'block';
-  document.getElementById('article-editor').style.display = 'none';
-
-  // Refresh the articles list when returning to homepage
-  renderSavedArticles();
+  // Navigate to builder.html
+  window.location.href = '/builder.html';
 }
 
 function showArticleEditor() {
-  document.getElementById('builder-homepage').style.display = 'none';
-  document.getElementById('article-editor').style.display = 'block';
+  // Navigate to builder-article.html
+  window.location.href = '/builder-article.html';
 }
 
 function exportArticle() {
@@ -869,11 +832,10 @@ function renderSavedArticles() {
 }
 
 function loadSavedArticle(articleId) {
-  showArticleEditor();
-  if (!window.articleBuilderInstance) {
-    window.articleBuilderInstance = new ArticleBuilder();
-  }
-  loadArticle(articleId);
+  // Store the article ID to load
+  localStorage.setItem('article_to_load', articleId);
+  // Navigate to editor page
+  window.location.href = '/builder-article.html';
 }
 
 function deleteSavedArticle(articleId) {
@@ -1303,15 +1265,32 @@ function setEditMode(isEditMode) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize ArticleBuilder only when in editor mode
+  // Check if we're on the editor page
   const articleEditor = document.getElementById('article-editor');
-  if (articleEditor && articleEditor.style.display !== 'none') {
+  if (articleEditor) {
     window.articleBuilderInstance = new ArticleBuilder();
 
-    // Try to restore the last article being edited
-    const lastArticleId = localStorage.getItem('current_article_id');
-    if (lastArticleId) {
-      loadArticle(lastArticleId);
+    // Check if there's an article to load
+    const articleToLoad = localStorage.getItem('article_to_load');
+    if (articleToLoad) {
+      loadArticle(articleToLoad);
+      localStorage.removeItem('article_to_load');
+    } else {
+      // Check if there's markdown to import
+      const markdownToImport = localStorage.getItem('markdown_to_import');
+      if (markdownToImport) {
+        importMarkdownToBuilder(markdownToImport);
+        localStorage.removeItem('markdown_to_import');
+      } else {
+        // Try to restore the last article being edited
+        const lastArticleId = localStorage.getItem('current_article_id');
+        if (lastArticleId) {
+          loadArticle(lastArticleId);
+        } else {
+          // Create new article if nothing to load
+          createNewArticle();
+        }
+      }
     }
   }
 
@@ -1322,13 +1301,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const newArticleBtn = document.getElementById('new-article-btn');
   if (newArticleBtn) {
     newArticleBtn.addEventListener('click', () => {
-      showArticleEditor();
-      // Initialize ArticleBuilder when switching to editor
-      if (!window.articleBuilderInstance) {
-        window.articleBuilderInstance = new ArticleBuilder();
-      }
-      // Create a new article
-      createNewArticle();
+      // Clear any stored article to load
+      localStorage.removeItem('article_to_load');
+      localStorage.removeItem('current_article_id');
+      // Navigate to editor page
+      window.location.href = '/builder-article.html';
     });
   }
 
@@ -1340,13 +1317,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const reader = new FileReader();
         reader.onload = (event) => {
           const markdown = event.target.result;
-          showArticleEditor();
-          if (!window.articleBuilderInstance) {
-            window.articleBuilderInstance = new ArticleBuilder();
-          }
-          // Clear current article ID to create new article from import
-          window.articleBuilderInstance.clearCurrentArticle();
-          importMarkdownToBuilder(markdown);
+          // Store markdown to import
+          localStorage.setItem('markdown_to_import', markdown);
+          localStorage.removeItem('article_to_load');
+          localStorage.removeItem('current_article_id');
+          // Navigate to editor page
+          window.location.href = '/builder-article.html';
         };
         reader.readAsText(file);
       }

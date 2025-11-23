@@ -18,13 +18,10 @@
     <!-- Builder Homepage -->
     <div id="builder-homepage" style="display: block;">
         <div class="builder-container">
-            <div class="builder-header">
-                <h1>Article Builder</h1>
-            </div>
+            <h1 id="main-title">Your Articles</h1>
 
             <div class="articles-section">
                 <div class="articles-header">
-                    <h2>Your Articles</h2>
                     <div class="articles-actions">
                         <button id="new-article-btn" class="action-button primary">
                             <span class="btn-icon">+</span>
@@ -40,52 +37,6 @@
                 <div id="articles-list" class="articles-grid">
                     <!-- Articles will be dynamically loaded from localStorage -->
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Article Editor (hidden by default) -->
-    <div id="article-editor" style="display: none;">
-        <div class="mode-toggle-container">
-            <div class="mode-toggle">
-                <button id="edit-mode-btn" class="mode-btn active">Edit</button>
-                <button id="preview-mode-btn" class="mode-btn">Preview</button>
-            </div>
-            <div class="editor-actions">
-                <button onclick="exportArticle()" class="action-btn">Export</button>
-                <button onclick="clearAll()" class="action-btn clear-btn">Clear</button>
-            </div>
-            <div id="saving-indicator" class="saving-indicator">
-                <span class="saving-text">Saved</span>
-            </div>
-        </div>
-        <div class="article-top-navigation">
-            <a href="#" class="back-link" onclick="showBuilderHomepage()">&larr; Back to Articles</a>
-            <div class="article-chapter" contenteditable="true" data-placeholder="Chapter">Chapter</div>
-            <div class="article-date" contenteditable="true" data-placeholder="Date">Dec 25, 2024</div>
-        </div>
-        <h1 contenteditable="true" data-placeholder="Untitled Article">Untitled Article</h1>
-        <div id="markdown-output"></div>
-
-        <!-- Component Buttons -->
-        <div class="component-buttons">
-            <div class="button-row">
-                <button class="component-btn active" data-component="paragraph" title="Add Paragraph">¶</button>
-                <button class="component-btn active" data-component="header" title="Add Header">H1</button>
-                <button class="component-btn active" data-component="subheader" title="Add Subheader">H2</button>
-                <button class="component-btn active" data-component="subsubheader" title="Add Subsubheader">H3</button>
-                <button class="component-btn active" data-component="blockquote" title="Add Quote">"</button>
-                <button class="component-btn active" data-component="unordered-list"
-                    title="Add Unordered List">•</button>
-                <button class="component-btn active" data-component="ordered-list" title="Add Ordered List">1.</button>
-                <button class="component-btn active" data-component="image" title="Add Image">📷</button>
-                <button class="component-btn active" data-component="table" title="Add Table">⊞</button>
-                <button class="component-btn active" data-component="math" title="Add Math">∑</button>
-            </div>
-            <div class="button-row">
-                <button id="delete-btn" class="component-btn delete-btn" title="Delete Selected Component">×</button>
-                <button id="move-up-btn" class="component-btn" title="Move Up">↑</button>
-                <button id="move-down-btn" class="component-btn" title="Move Down">↓</button>
             </div>
         </div>
     </div>

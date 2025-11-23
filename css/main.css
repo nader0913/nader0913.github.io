@@ -19,8 +19,6 @@ body {
 }
 
 h1 {
-  font-size: 28px;
-  margin-bottom: 31px;
   font-weight: bold;
   text-align: center;
   hyphens: auto;
@@ -33,6 +31,11 @@ h2 {
 
 h3 {
   hyphens: auto;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  margin: 1em 0;
 }
 
 table {
@@ -65,12 +68,6 @@ a:hover {
   color: #1a4480;
 }
 
-.article-top-navigation a, 
-.article-bottom-navigation a {
-  color: #2c5aa0;
-  text-decoration: none;
-}
-
 figure img {
   width: 100%;
   display: block;
@@ -82,60 +79,8 @@ figcaption {
   text-align: center;
 }
 
-#main-page {
-  width: 100%;
-  margin-top: 2em;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-#main-footer {
+footer {
   text-align: center;
-  font-size: 12px;
-  margin-top: 31px;
-  margin-bottom: 1em;
-}
-
-.toc-entry {
-  color: rgb(0,0,0.87);
-  display: block;
-  cursor: pointer;
-  padding: 7px 3px;
-  text-decoration: none;
-  border-bottom: 1px dotted #ccc;
-}
-
-.toc-entry:first-child {
-  border-top: 1px dotted #ccc;
-}
-
-.toc-entry:hover {
-  color: rgb(0,0,0.87);
-  background-color: #f8f8f8;
-}
-
-.toc-title {
-  font-size: 15px;
-  font-weight: bold;
-  margin-bottom: 3px;
-  display: block;
-}
-
-.toc-meta {
-  font-size: 12px;
-  color: rgb(0,0,0,0.6);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-a {
-  color: #2c5aa0;
-  text-decoration: underline;
-}
-
-a:hover {
-  color: #1a4480;
 }
 
 @media (max-width: 1366px) {
