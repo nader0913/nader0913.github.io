@@ -81,6 +81,7 @@ figcaption {
 
 footer {
   text-align: center;
+  margin-top: 1.5em;
 }
 
 @media (max-width: 1366px) {
