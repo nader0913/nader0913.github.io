@@ -86,15 +86,20 @@ const PostLoader = {
   },
 
   setPostContent(post, markdown) {
-    const { html, languages } = toHTML(markdown);
+    const html = toHTMLLine(markdown);
     DOM.get('markdown-output').innerHTML = html;
     DOM.get('article-chapter').textContent = Array.isArray(post.tags) ? post.tags.join(' • ') : post.tags;
     DOM.get('article-title').textContent = post.title;
     DOM.get('article-date').textContent = post.date || '';
 
     // Apply syntax highlighting if there are code blocks
-    if (languages.length > 0 && window.Prism) {
+    if (window.Prism) {
       Prism.highlightAll();
+    }
+
+    // Render math if MathJax is available
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      MathJax.typesetPromise();
     }
   },
 

@@ -20,6 +20,7 @@ class ArticleBuilder {
     this.savingIndicator = document.getElementById('saving-indicator');
     this.savingText = this.savingIndicator?.querySelector('.saving-text');
     this.hasUnsavedChanges = false;
+    this.liveMarkdown = ''; // Live markdown content
     this.init();
   }
 
@@ -35,6 +36,7 @@ class ArticleBuilder {
   }
 
   init() {
+    this.syncComponentCounter();
     this.updateManagementButtonStates();
     this.setupComponentToolbarListeners();
     this.setupComponentSelection();
@@ -44,9 +46,26 @@ class ArticleBuilder {
     this.setupAutoSave();
   }
 
+  syncComponentCounter() {
+    // Find the highest component number in existing components
+    const components = this.content.querySelectorAll('.builder-component[id^="component-"]');
+    let maxCounter = 0;
+
+    components.forEach(comp => {
+      const match = comp.id.match(/component-(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxCounter) maxCounter = num;
+      }
+    });
+
+    this.componentCounter = maxCounter;
+  }
+
   setupAutoSave() {
     // Listen for content changes
     const observeChanges = () => {
+      this.rebuildLiveMarkdown();
       this.scheduleAutoSave();
     };
 
@@ -260,6 +279,9 @@ class ArticleBuilder {
       case 'ordered-list':
         element = this.createList('ol');
         break;
+      case 'code':
+        element = this.createCode();
+        break;
       case 'image':
         element = this.createImage();
         break;
@@ -315,6 +337,33 @@ class ArticleBuilder {
     return div;
   }
 
+  createCode() {
+    const wrapper = document.createElement('div');
+    wrapper.setAttribute('type', 'code');
+
+    const languageInput = document.createElement('div');
+    languageInput.className = 'code-language';
+    languageInput.contentEditable = true;
+    languageInput.setAttribute('data-placeholder', 'Language (e.g., javascript)');
+    languageInput.textContent = 'javascript';
+
+    // Prevent line breaks in language input
+    languageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+      }
+    });
+
+    const pre = document.createElement('pre');
+    const code = document.createElement('code');
+    code.contentEditable = true;
+    code.setAttribute('data-placeholder', 'Enter code here...');
+    pre.appendChild(code);
+
+    wrapper.appendChild(languageInput);
+    wrapper.appendChild(pre);
+    return wrapper;
+  }
 
   createList(listType = 'ul') {
     const list = document.createElement(listType);
@@ -399,7 +448,7 @@ class ArticleBuilder {
       const url = prompt('Enter image URL:') || '';
       if (url && url.trim()) {
         img.src = url.trim();
-        img.style.display = 'block';
+        img.style.cssText = 'display: block; width: 100%;';
         caption.style.display = 'block';
         button.style.display = 'none';
       }
@@ -460,7 +509,7 @@ class ArticleBuilder {
   updateSelectedComponentStyle() {
     const currentSelected = document.querySelector('.builder-component.selected');
 
-    // If selection changed, remove selected class from current and handle math rendering
+    // If selection changed, remove selected class from current and handle math/code rendering
     if (currentSelected && currentSelected.id !== this.selectedComponent) {
       currentSelected.classList.remove('selected');
 
@@ -469,22 +518,69 @@ class ArticleBuilder {
         const mathText = currentSelected.textContent.trim();
         currentSelected.dataset.mathText = mathText;
         currentSelected.innerHTML = `$$${mathText}$$`;
-        if (window.MathJax) {
-          MathJax.typesetPromise([currentSelected]);
+        currentSelected.contentEditable = false;
+
+        // Render with MathJax
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          // Clear any previous MathJax rendering
+          if (window.MathJax.typesetClear) {
+            MathJax.typesetClear([currentSelected]);
+          }
+          MathJax.typesetPromise([currentSelected]).catch((err) => {
+            console.error('MathJax rendering failed:', err);
+          });
+        }
+      }
+
+      // Render code with syntax highlighting when unselecting
+      if (currentSelected.getAttribute('type') === 'code') {
+        const codeEl = currentSelected.querySelector('code');
+        const languageEl = currentSelected.querySelector('.code-language');
+        if (codeEl && languageEl) {
+          const code = codeEl.textContent;
+          const language = languageEl.textContent.trim() || 'javascript';
+
+          // Store original code
+          codeEl.dataset.code = code;
+
+          // Apply Prism highlighting
+          codeEl.className = `language-${language}`;
+          codeEl.textContent = code;
+          if (window.Prism) {
+            Prism.highlightElement(codeEl);
+          }
+          codeEl.contentEditable = false;
         }
       }
     }
 
-    // Add selected class to new selected component and handle math input mode
+    // Add selected class to new selected component and handle math/code input mode
     if (this.selectedComponent) {
       const selectedElement = document.getElementById(this.selectedComponent);
-      if (selectedElement && !selectedElement.classList.contains('selected')) {
+      if (selectedElement) {
+        const wasSelected = selectedElement.classList.contains('selected');
         selectedElement.classList.add('selected');
 
-        // Switch to input mode when selecting math
+        // Switch to input mode when selecting math (always, even if already selected)
         if (selectedElement.getAttribute('type') === 'math') {
-          selectedElement.innerHTML = '';
-          selectedElement.textContent = selectedElement.dataset.mathText;
+          // If it's not editable, it's in rendered mode - switch to edit mode
+          if (selectedElement.contentEditable !== 'true') {
+            selectedElement.contentEditable = true;
+            selectedElement.innerHTML = '';
+            selectedElement.textContent = selectedElement.dataset.mathText || '';
+          }
+        }
+
+        // Switch to edit mode when selecting code (always, even if already selected)
+        if (selectedElement.getAttribute('type') === 'code') {
+          const codeEl = selectedElement.querySelector('code');
+          if (codeEl && codeEl.contentEditable !== 'true') {
+            const originalCode = codeEl.dataset.code || codeEl.textContent;
+            codeEl.innerHTML = '';
+            codeEl.textContent = originalCode;
+            codeEl.className = '';
+            codeEl.contentEditable = true;
+          }
         }
       }
     }
@@ -551,6 +647,91 @@ class ArticleBuilder {
         <small>Press Ctrl+D to toggle</small>
       `;
     }
+  }
+
+  rebuildLiveMarkdown() {
+    // Rebuild markdown from all components in real-time
+    const components = this.content.querySelectorAll('.builder-component');
+    const markdownParts = [];
+
+    components.forEach((component) => {
+      const md = convertComponentToMarkdown(component);
+      if (md) markdownParts.push(md);
+    });
+
+    this.liveMarkdown = markdownParts.join('\n\n');
+  }
+
+  viewLiveMarkdown() {
+    // Show the live markdown in a modal/alert
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+
+    const content = document.createElement('div');
+    content.style.cssText = `
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 1200px;
+      height: 85vh;
+      display: flex;
+      flex-direction: column;
+    `;
+
+    const title = document.createElement('h2');
+    title.textContent = 'Live Markdown';
+    title.style.marginTop = '0';
+
+    const textarea = document.createElement('textarea');
+    textarea.value = this.liveMarkdown;
+    textarea.readOnly = true;
+    textarea.style.cssText = `
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      resize: none;
+    `;
+
+    const buttons = document.createElement('div');
+    buttons.style.cssText = 'display: flex; gap: 10px; margin-top: 10px;';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = 'Copy';
+    copyBtn.style.cssText = 'padding: 8px 16px; cursor: pointer;';
+    copyBtn.onclick = () => {
+      textarea.select();
+      document.execCommand('copy');
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+    };
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.style.cssText = 'padding: 8px 16px; cursor: pointer;';
+    closeBtn.onclick = () => modal.remove();
+
+    buttons.append(copyBtn, closeBtn);
+    content.append(title, textarea, buttons);
+    modal.appendChild(content);
+    modal.onclick = (e) => {
+      if (e.target === modal) modal.remove();
+    };
+
+    document.body.appendChild(modal);
   }
 
   setupTextSelectionToolbar() {
@@ -663,7 +844,9 @@ const LocalStorageManager = {
     const title = titleElement?.textContent?.trim() || 'Untitled Article';
     const date = dateElement?.textContent?.trim() || new Date().toLocaleDateString();
     const tag = chapterElement?.textContent?.trim() || 'General';
-    const content = generateMarkdownFromBuilder();
+
+    // Use live markdown from builder instance
+    const content = window.articleBuilderInstance?.liveMarkdown || generateMarkdownFromBuilder();
 
     return { title, date, tag, content };
   }
@@ -764,6 +947,8 @@ function loadArticle(articleId) {
   if (window.articleBuilderInstance) {
     window.articleBuilderInstance.setCurrentArticleId(articleId);
     window.articleBuilderInstance.updateSavingIndicator('saved');
+    window.articleBuilderInstance.syncComponentCounter();
+    window.articleBuilderInstance.rebuildLiveMarkdown();
   }
 
   // Article loaded successfully
@@ -785,10 +970,29 @@ function createNewArticle() {
   // Clear the current article ID so auto-save creates a new one
   if (window.articleBuilderInstance) {
     window.articleBuilderInstance.clearCurrentArticle();
+    window.articleBuilderInstance.componentCounter = 0;
+    window.articleBuilderInstance.liveMarkdown = '';
     window.articleBuilderInstance.updateSavingIndicator('saved');
   }
 
   // New article created successfully
+}
+
+function getRelativeTime(timestamp) {
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+
+  if (seconds < 60) return 'just now';
+  if (minutes < 60) return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+  if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+  if (days < 30) return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+  return `${months} ${months === 1 ? 'month' : 'months'} ago`;
 }
 
 function renderSavedArticles() {
@@ -813,6 +1017,10 @@ function renderSavedArticles() {
     articleCard.className = 'article-card';
     articleCard.style.cursor = 'pointer';
     articleCard.onclick = () => loadSavedArticle(id);
+
+    // Format relative time
+    const timeAgo = getRelativeTime(article.timestamp);
+
     articleCard.innerHTML = `
       <div class="article-row">
         <div class="article-info">
@@ -820,7 +1028,7 @@ function renderSavedArticles() {
           <span class="article-tag">${article.tag}</span>
         </div>
         <div class="article-actions">
-          <span class="article-date">${article.date}</span>
+          <span class="article-date">Updated ${timeAgo}</span>
           <div class="article-card-actions">
             <button class="delete-btn" onclick="event.stopPropagation(); deleteSavedArticle('${id}')">Delete</button>
           </div>
@@ -853,6 +1061,13 @@ function clearAll() {
   }
 }
 
+function viewMarkdown() {
+  if (window.articleBuilderInstance) {
+    window.articleBuilderInstance.rebuildLiveMarkdown();
+    window.articleBuilderInstance.viewLiveMarkdown();
+  }
+}
+
 function convertComponentToMarkdown(component) {
   const className = component.className;
   const content = component.textContent.trim();
@@ -872,10 +1087,33 @@ function convertComponentToMarkdown(component) {
   } else if (className.includes('table-wrapper')) {
     const table = component.querySelector('table');
     return convertTableToMarkdown(table);
+  } else if (component.getAttribute('type') === 'code') {
+    const languageEl = component.querySelector('.code-language');
+    const codeEl = component.querySelector('code');
+    const language = languageEl?.textContent.trim() || '';
+    const code = codeEl?.textContent.trim() || '';
+    return `\`\`\`${language}\n${code}\n\`\`\``;
   } else if (component.getAttribute('type') === 'math') {
-    // For math components, use the stored LaTeX or extract from display
-    const mathText = component.dataset.mathText || extractMathFromDisplay(component);
+    // For math components, check if currently editing or rendered
+    let mathText;
+    if (component.contentEditable === 'true') {
+      // Currently editing - get text content directly
+      mathText = component.textContent.trim();
+    } else {
+      // Rendered - get from dataset or extract from display
+      mathText = component.dataset.mathText || extractMathFromDisplay(component);
+    }
     return `$$\n${mathText}\n$$`;
+  } else if (component.tagName === 'FIGURE') {
+    // Handle image components
+    const img = component.querySelector('img');
+    const caption = component.querySelector('figcaption');
+
+    if (img && img.src && img.style.display !== 'none') {
+      const alt = caption?.textContent?.trim() || '';
+      return `![${alt}](${img.src})`;
+    }
+    return ''; // No image set yet
   } else if (component.tagName === 'P') {
     return convertHtmlToMarkdown(component.innerHTML);
   }
@@ -892,8 +1130,9 @@ function convertHtmlToMarkdown(html) {
     // Italic
     .replace(/<i>(.*?)<\/i>/g, '*$1*')
     .replace(/<em>(.*?)<\/em>/g, '*$1*')
-    // Strikethrough
+    // Strikethrough (handle both <s> and <strike>)
     .replace(/<s>(.*?)<\/s>/g, '~~$1~~')
+    .replace(/<strike>(.*?)<\/strike>/g, '~~$1~~')
     // Links
     .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
     // Remove any other HTML tags
@@ -1106,10 +1345,18 @@ function importMarkdownToBuilder(markdown) {
     else if (trimmedBlock.includes('|') && trimmedBlock.includes('---')) {
       element = createBuilderTable(trimmedBlock);
     }
+    // Code blocks
+    else if (trimmedBlock.startsWith('```')) {
+      element = createBuilderCodeBlock(trimmedBlock);
+    }
     // Math blocks (preprocessed)
     else if (trimmedBlock.startsWith('MATHBLOCK:') && trimmedBlock.endsWith(':MATHBLOCK')) {
       const mathContent = trimmedBlock.slice(10, -10);
       element = createBuilderComponent('math', mathContent);
+    }
+    // Images
+    else if (trimmedBlock.startsWith('![')) {
+      element = createBuilderImage(trimmedBlock);
     }
     // Regular paragraph
     else {
@@ -1122,6 +1369,12 @@ function importMarkdownToBuilder(markdown) {
       outputContainer.appendChild(element);
     }
   });
+
+  // Rebuild live markdown after import and sync counter
+  if (window.articleBuilderInstance) {
+    window.articleBuilderInstance.syncComponentCounter();
+    window.articleBuilderInstance.rebuildLiveMarkdown();
+  }
 }
 
 function createBuilderComponent(type, content) {
@@ -1133,17 +1386,34 @@ function createBuilderComponent(type, content) {
   element.contentEditable = true;
   element.setAttribute('data-placeholder', config.placeholder);
 
+  // Set type attribute for special components
+  if (type === 'math') {
+    element.setAttribute('type', 'math');
+  }
+
   if (content) {
     if (type === 'math') {
       // For math components, store the raw LaTeX and render it
       element.dataset.mathText = content;
       element.innerHTML = `$$${content}$$`;
-      // Trigger MathJax rendering after a short delay
-      setTimeout(() => {
-        if (window.MathJax) {
-          MathJax.typesetPromise([element]);
+      element.contentEditable = false;
+
+      // Trigger MathJax rendering when MathJax is ready
+      const renderMath = () => {
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          // Clear any existing MathJax rendering first
+          if (window.MathJax.typesetClear) {
+            MathJax.typesetClear([element]);
+          }
+          MathJax.typesetPromise([element]).catch((err) => {
+            console.error('MathJax rendering failed:', err);
+          });
+        } else {
+          // MathJax not ready yet, try again
+          setTimeout(renderMath, 100);
         }
-      }, 100);
+      };
+      setTimeout(renderMath, 50);
     } else {
       // Convert markdown formatting to HTML for other components
       const htmlContent = convertMarkdownToHtml(content);
@@ -1227,6 +1497,89 @@ function createBuilderTable(content) {
   table.appendChild(thead);
   table.appendChild(tbody);
   wrapper.appendChild(table);
+  return wrapper;
+}
+
+function createBuilderImage(markdown) {
+  // Parse markdown image: ![alt text](url)
+  const match = markdown.match(/!\[(.*?)\]\((.*?)\)/);
+  if (!match) return null;
+
+  const alt = match[1];
+  const url = match[2];
+
+  const figure = document.createElement('figure');
+
+  const button = document.createElement('button');
+  button.textContent = 'Insert Image';
+  button.style.cssText = 'width: 100%; height: 40px; border: 1px solid #ccc; background: #f9f9f9; color: #333; font-size: 14px; cursor: pointer; display: none;';
+
+  const img = document.createElement('img');
+  img.src = url;
+  img.style.cssText = 'display: block; width: 100%;';
+
+  const caption = document.createElement('figcaption');
+  caption.contentEditable = true;
+  caption.setAttribute('data-placeholder', 'Image caption...');
+  caption.textContent = alt;
+  caption.style.display = 'block';
+
+  button.addEventListener('click', () => {
+    const newUrl = prompt('Enter image URL:', url) || '';
+    if (newUrl && newUrl.trim()) {
+      img.src = newUrl.trim();
+      img.style.cssText = 'display: block; width: 100%;';
+      caption.style.display = 'block';
+      button.style.display = 'none';
+    }
+  });
+
+  figure.appendChild(button);
+  figure.appendChild(img);
+  figure.appendChild(caption);
+  return figure;
+}
+
+function createBuilderCodeBlock(content) {
+  const lines = content.split('\n');
+  const firstLine = lines[0];
+  const language = firstLine.replace(/^```/, '').trim() || 'javascript';
+  const code = lines.slice(1, -1).join('\n');
+
+  const wrapper = document.createElement('div');
+  wrapper.setAttribute('type', 'code');
+
+  const languageInput = document.createElement('div');
+  languageInput.className = 'code-language';
+  languageInput.contentEditable = true;
+  languageInput.setAttribute('data-placeholder', 'Language');
+  languageInput.textContent = language;
+
+  // Prevent line breaks in language input
+  languageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  });
+
+  const pre = document.createElement('pre');
+  const codeEl = document.createElement('code');
+  codeEl.setAttribute('data-placeholder', 'Enter code here...');
+
+  // Store original code and apply syntax highlighting
+  codeEl.dataset.code = code;
+  codeEl.className = `language-${language}`;
+  codeEl.textContent = code;
+  codeEl.contentEditable = false;
+
+  // Apply Prism highlighting after element is created
+  if (window.Prism) {
+    setTimeout(() => Prism.highlightElement(codeEl), 0);
+  }
+
+  pre.appendChild(codeEl);
+  wrapper.appendChild(languageInput);
+  wrapper.appendChild(pre);
   return wrapper;
 }
 

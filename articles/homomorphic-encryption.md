@@ -40,33 +40,33 @@ For simplicity purposes, We are going to use a straightforward SHE encryption sc
 
 We start by picking:
 
-1. A large, odd number $p$ to be the secret key. 
-2. A large, random number $q_i$ (for each encryption).  
-3. A small, random number $r_i$, also called noise (for each encryption).
+1. A large, odd number *p* to be the secret key.
+2. A large, random number *q* (for each encryption).
+3. A small, random number *r*, also called noise (for each encryption).
 
-Note that $q_ip + 2r_i$ is the public key.
+Note that the public key is *qp + 2r*.
 
 The noise mixed into the encryption ensures the system's security by adding random small values, like numbers or polynomial coefficients that could be -1, 0, or 1. This randomness means the encryption method is based on chance, although there are other random factors in play as well, not just the noise.
 
 ## Encryption
 
-Consider a bit $b$ (0/1). To encrypt, simply compute:
+Consider a bit *b* (0 or 1). To encrypt, simply compute:
 $$
-c = q_ip + 2r_i + b
+c = qp + 2r + b
 $$
 
 ## Decryption
 
-To decrypt ciphertext $c$, simply compute:
+To decrypt ciphertext *c*, simply compute:
 $$
 c \bmod p \bmod 2 = b
 $$
 
-we do $c \bmod p$ to get $2r_i + b$, then we reduce $\bmod 2$ to get $b$.
+We do *c* mod *p* to get *2r + b*, then we reduce mod 2 to get *b*.
 
 ## HE Addition
 
-Consider $c_1$ and $c_2$ ciphertexts. To add, simply compute:
+Consider two ciphertexts. To add, simply compute:
 
 $$
 \small{
@@ -76,11 +76,11 @@ c_1 + c_2 = p(q_1 + q_2) + 2(r_1 + r_2) + (b_1 + b_2)
 }
 $$
 
-> The noise increases linearly with addition: $2(r_1 + r_2)$
+The noise increases linearly with addition.
 
 ## HE Multiplication
 
-Consider $c_1$ and $c_2$ ciphertexts. To multiply, simply compute:
+Consider two ciphertexts. To multiply, simply compute:
 
 $$
 \begin{gather}
@@ -89,11 +89,11 @@ c_1 \times c_2 = q_1q_2p^2 + q_1pb_2 + q_2pb_1 \\\\ + r_2(q_1p + b_1) + 2r_1(q_2
 \end{gather}
 $$
 
-> The noise increases exponentially with multiplication: $2r_2(q_1p + b_1) + 2r_1(q_2p + b_2) + 4r_1r_2$
+The noise increases exponentially with multiplication.
 
 # Noise
 
-In an encryption scheme, the noise, represented as $2r$, must not exceed half the value of $p$ to ensure accurate decryption. When the noise surpasses $p/2$, decryption becomes unreliable. Without a strategy to manage or reset this growth, the number of operations becomes limited—numerous additions are possible, yet multiplications are few before reaching the critical noise threshold of $p/2$.
+In an encryption scheme, the noise *2r* must not exceed half the value of *p* to ensure accurate decryption. When the noise surpasses *p/2*, decryption becomes unreliable. Without a strategy to manage or reset this growth, the number of operations becomes limited—numerous additions are possible, yet multiplications are few before reaching the critical noise threshold of *p/2*.
 
 The limitation of SHE is its noise constraint. For FHE, it's necessary to periodically reset the noise as it approaches the maximum threshold.
 

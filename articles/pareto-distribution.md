@@ -17,8 +17,12 @@ Let’s say there is a probability x1 that an individual is diligent, probabilit
 
 # Pareto distribution
 
-
-![Pareto probability density function](https://cdn-images-1.medium.com/max/2828/1*hzd-vL6YohNhE2LE-y_g5Q.png)
+$$
+f_X(x) = \begin{cases}
+\frac{\alpha x_m^\alpha}{x^{\alpha+1}} & x \geq x_m, \\
+0 & x < x_m.
+\end{cases}
+$$
 
 I will be focusing more on the Pareto distribution since it’s more universal. Let’s start with some Maths first.
 The function have 1 parameter α and 1 variable x. In the graph, we have xm = 1 and different α values. α represents the probability when x = xm.

@@ -1,9 +1,17 @@
 function toHTML(md) {
-  md = md.replace(/\\\$/g, 'ESCAPED_DOLLAR_SIGN');
-
+  // Extract code blocks
+  // first line should contain three backticks and the language.
+  // last line should contain three backticks.
+  // lines in between are rendered as code.
+  // e.g.
+  // ```javascript     <--- first line
+  // let x = 5;          |  
+  // let y = 4;          |  lines in between
+  // let z = x * y;      |
+  // ```               <--- last line
   const codeBlocks = [];
   const languages = [];
-  md = md.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+  md = md.replace(/```(\w+)?\n([\s\S]*?)\n```/g, (_, lang, code) => {
     const placeholder = `CODE_BLOCK_${codeBlocks.length}`;
     codeBlocks.push({ lang: lang || '', code: code.trim() });
     if (lang) {
@@ -12,24 +20,44 @@ function toHTML(md) {
     return placeholder;
   });
 
-  const blocks = md.split(/\n{2,}/).map(block => parseBlock(block.trim()));
+  // Extract math blocks
+  // first line should carry $$.
+  // lines in between are rendered as math.
+  // last line should carry $$.
+  // e.g.
+  // $$              <--- first line
+  // E = mc^2          |  lines in between
+  // $$              <--- last line
+  const mathBlocks = [];
+  md = md.replace(/\$\$\n([\s\S]*?)\n\$\$/g, (_, math) => {
+    const placeholder = `MATH_BLOCK_${mathBlocks.length}`;
+    mathBlocks.push(math.trim());
+    return placeholder;
+  });
 
+  // Process text blocks and inline elements
+  // e.g. paragraphs, headers, lists, blockquotes, images, links, bold, italics
+  const blocks = md.split(/\n{2,}/).map(block => parseBlock(block.trim()));
   let html = blocks.join('\n\n')
     .replace(/^### (.*$)/gim, '<div type="subheader"><h3>$1</h3></div>')
     .replace(/^## (.*$)/gim, '<div type="subheader"><h3>$1</h3></div>')
     .replace(/^# (.*$)/gim, '<div type="header"><h2>$1</h2></div>')
-    .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
-    .replace(/\*(.*?)\*/gim, '<i>$1</i>')
     .replace(/!\[(.*?)\]\((.*?)\)/gim, '<div type="image"><figure><img alt="$1" src="$2"><figcaption>$1</figcaption></figure></div>')
+    .replace(/^>\s?(.*)$/gim, '<div type="blockquote"><blockquote>$1</blockquote></div>')
     .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
-    .replace(/^>\s?(.*)$/gim, '<div type="blockquote"><blockquote>$1</blockquote></div>');
+    .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
+    .replace(/\*(.*?)\*/gim, '<i>$1</i>');
 
+  // Replace code block placeholders
   codeBlocks.forEach((block, i) => {
     html = html.replace(`CODE_BLOCK_${i}`, renderCodeBlock(block.lang, block.code));
   });
 
-  html = html.replace(/\$\$([\s\S]+?)\$\$/g, (_, expr) => `<div type="math">$$${expr}$$</div>`);
-  html = html.replace(/\$(.+?)\$/g, (_, expr) => `\\(${expr}\\)`);
+  // Replace math block placeholders
+  mathBlocks.forEach((math, i) => {
+    html = html.replace(`MATH_BLOCK_${i}`, `<div type="math">$$${math}$$</div>`);
+  });
+
   html = html.replace(/ESCAPED_DOLLAR_SIGN/g, '$');
 
   return { html, languages };
@@ -163,6 +191,164 @@ function renderCodeBlock(lang, code) {
   const langLabel = lang ? `<div class="code-language">${lang}</div>` : '';
 
   return `<div type="code">${langLabel}<pre${langClass}><code${langClass}>${escapedCode}</code></pre></div>`;
+}
+
+function toHTMLLine(md) {
+  // Process markdown line by line
+  const lines = md.split('\n');
+  const result = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i].trim();
+
+    // Skip empty lines
+    if (!line) {
+      i++;
+      continue;
+    }
+
+    // Headers (single line)
+    if (line.startsWith('### ')) {
+      result.push(`<div type="subheader"><h3>${line.substring(4)}</h3></div>`);
+      i++;
+      continue;
+    }
+    if (line.startsWith('## ')) {
+      result.push(`<div type="subheader"><h3>${line.substring(3)}</h3></div>`);
+      i++;
+      continue;
+    }
+    if (line.startsWith('# ')) {
+      result.push(`<div type="header"><h2>${line.substring(2)}</h2></div>`);
+      i++;
+      continue;
+    }
+
+    // Blockquote (single line)
+    if (line.startsWith('> ')) {
+      result.push(`<div type="blockquote"><blockquote>${line.substring(2)}</blockquote></div>`);
+      i++;
+      continue;
+    }
+
+    // Image (single line)
+    if (line.startsWith('![')) {
+      const match = line.match(/!\[(.*?)\]\((.*?)\)/);
+      if (match) {
+        result.push(`<div type="image"><figure><img alt="${match[1]}" src="${match[2]}"><figcaption>${match[1]}</figcaption></figure></div>`);
+        i++;
+        continue;
+      }
+    }
+
+    // Code block (multi-line with markers)
+    if (line.startsWith('```')) {
+      const lang = line.substring(3).trim();
+      i++; // move to next line
+      const codeLines = [];
+      while (i < lines.length && !lines[i].trim().startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      const code = codeLines.join('\n');
+      result.push(renderCodeBlock(lang, code));
+      i++; // skip closing ```
+      continue;
+    }
+
+    // Math block (multi-line with markers)
+    if (line === '$$') {
+      i++; // move to next line
+      const mathLines = [];
+      while (i < lines.length && lines[i].trim() !== '$$') {
+        mathLines.push(lines[i]);
+        i++;
+      }
+      const math = mathLines.join('\n').trim();
+      result.push(`<div type="math">$$${math}$$</div>`);
+      i++; // skip closing $$
+      continue;
+    }
+
+    // Ordered list (multi-line consecutive)
+    if (/^\d+\.\s/.test(line)) {
+      const listLines = [];
+      while (i < lines.length) {
+        const currentLine = lines[i].trim();
+        if (!currentLine || !/^\d+\.\s/.test(currentLine)) break;
+        const match = currentLine.match(/^\d+\.\s+(.*)$/);
+        if (match) listLines.push(`<li>${match[1]}</li>`);
+        i++;
+      }
+      result.push(`<div type="list"><ol>${listLines.join('')}</ol></div>`);
+      continue;
+    }
+
+    // Unordered list (multi-line consecutive)
+    if (/^[-*+]\s/.test(line)) {
+      const listLines = [];
+      while (i < lines.length) {
+        const currentLine = lines[i].trim();
+        if (!currentLine || !/^[-*+]\s/.test(currentLine)) break;
+        const match = currentLine.match(/^[-*+]\s+(.*)$/);
+        if (match) listLines.push(`<li>${match[1]}</li>`);
+        i++;
+      }
+      result.push(`<div type="list"><ul>${listLines.join('')}</ul></div>`);
+      continue;
+    }
+
+    // Table (multi-line consecutive)
+    if (line.startsWith('|')) {
+      const tableLines = [];
+      while (i < lines.length) {
+        const currentLine = lines[i].trim();
+        if (!currentLine || !currentLine.startsWith('|')) break;
+        tableLines.push(currentLine);
+        i++;
+      }
+      result.push(parseTable(tableLines.join('\n')));
+      continue;
+    }
+
+    // Regular paragraph (multi-line consecutive)
+    const paragraphLines = [];
+    while (i < lines.length) {
+      const currentLine = lines[i].trim();
+
+      // Stop if empty or special marker
+      if (!currentLine ||
+          currentLine.startsWith('#') ||
+          currentLine.startsWith('> ') ||
+          currentLine.startsWith('![') ||
+          currentLine.startsWith('```') ||
+          currentLine === '$$' ||
+          /^\d+\.\s/.test(currentLine) ||
+          /^[-*+]\s/.test(currentLine) ||
+          currentLine.startsWith('|')) {
+        break;
+      }
+
+      paragraphLines.push(currentLine);
+      i++;
+    }
+
+    if (paragraphLines.length > 0) {
+      const paragraphText = paragraphLines.join(' ');
+      result.push(`<div type="paragraph"><p>${paragraphText}</p></div>`);
+    }
+  }
+
+  // Process inline formatting for all HTML as last step
+  let html = result.join('\n');
+  html = html
+    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\*(.*?)\*/g, '<i>$1</i>')
+    .replace(/~~(.*?)~~/g, '<s>$1</s>');
+
+  return html;
 }
 
 function MarkdownToHtml(markdown) {
