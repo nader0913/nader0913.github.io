@@ -2,7 +2,6 @@ const ARTICLE_COMPONENT_TYPES = {
   paragraph: { tag: 'p', className: '', placeholder: 'Start writing...' },
   header: { tag: 'h2', className: '', placeholder: 'Header text' },
   subheader: { tag: 'h3', className: '', placeholder: 'Subheader text' },
-  subsubheader: { tag: 'h3', className: '', placeholder: 'Subsubheader text' },
   blockquote: { tag: 'blockquote', className: '', placeholder: 'Quote text...' },
   math: { tag: 'div', className: '', placeholder: 'Enter LaTeX: x^2 + y^2 = r^2' }
 };
@@ -33,6 +32,7 @@ class ArticleBuilder {
     this.updateSelectedComponentStyle();
     this.updateManagementButtonStates();
     this.updateDebugInfo();
+    this.updateComponentButtonsPosition();
   }
 
   init() {
@@ -225,8 +225,10 @@ class ArticleBuilder {
         e.stopPropagation();
         if (this.selectedComponent) {
           const element = document.getElementById(this.selectedComponent);
-          if (element && element.previousElementSibling) {
-            this.content.insertBefore(element, element.previousElementSibling);
+          const prevComponent = this.getPreviousComponent(element);
+          if (element && prevComponent) {
+            this.content.insertBefore(element, prevComponent);
+            this.updateComponentButtonsPosition();
           }
         }
       });
@@ -238,8 +240,10 @@ class ArticleBuilder {
         e.stopPropagation();
         if (this.selectedComponent) {
           const element = document.getElementById(this.selectedComponent);
-          if (element && element.nextElementSibling) {
-            this.content.insertBefore(element.nextElementSibling, element);
+          const nextComponent = this.getNextComponent(element);
+          if (element && nextComponent) {
+            this.content.insertBefore(nextComponent, element);
+            this.updateComponentButtonsPosition();
           }
         }
       });
@@ -269,7 +273,6 @@ class ArticleBuilder {
       case 'paragraph':
       case 'header':
       case 'subheader':
-      case 'subsubheader':
       case 'blockquote':
         element = this.createSimpleComponent(type);
         break;
@@ -297,7 +300,22 @@ class ArticleBuilder {
       element.id = id;
       element.classList.add('builder-component');
 
-      this.content.appendChild(element);
+      // Insert after selected component, or at the end if nothing selected
+      if (this.selectedComponent) {
+        const selectedElement = document.getElementById(this.selectedComponent);
+        if (selectedElement) {
+          const nextComponent = this.getNextComponent(selectedElement);
+          if (nextComponent) {
+            this.content.insertBefore(element, nextComponent);
+          } else {
+            this.content.appendChild(element);
+          }
+        } else {
+          this.content.appendChild(element);
+        }
+      } else {
+        this.content.appendChild(element);
+      }
 
       // Use requestAnimationFrame to ensure DOM is ready before selecting
       requestAnimationFrame(() => {
@@ -326,6 +344,31 @@ class ArticleBuilder {
     element.className = config.className;
     element.contentEditable = true;
     element.setAttribute('data-placeholder', config.placeholder);
+
+    // Handle Enter key to create new paragraph
+    element.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const newParagraph = this.createSimpleComponent('paragraph');
+        if (newParagraph) {
+          const id = `component-${++this.componentCounter}`;
+          newParagraph.id = id;
+          newParagraph.classList.add('builder-component');
+
+          const wrapper = element.closest('.builder-component');
+          const nextComponent = this.getNextComponent(wrapper);
+          if (nextComponent) {
+            this.content.insertBefore(newParagraph, nextComponent);
+          } else {
+            this.content.appendChild(newParagraph);
+          }
+
+          this.selectedComponent = id;
+          newParagraph.focus();
+        }
+      }
+    });
+
     return element;
   }
 
@@ -517,18 +560,25 @@ class ArticleBuilder {
       if (currentSelected.getAttribute('type') === 'math') {
         const mathText = currentSelected.textContent.trim();
         currentSelected.dataset.mathText = mathText;
-        currentSelected.innerHTML = `$$${mathText}$$`;
-        currentSelected.contentEditable = false;
 
-        // Render with MathJax
-        if (window.MathJax && window.MathJax.typesetPromise) {
-          // Clear any previous MathJax rendering
-          if (window.MathJax.typesetClear) {
-            MathJax.typesetClear([currentSelected]);
+        // If empty, keep it editable to show placeholder
+        if (!mathText) {
+          currentSelected.contentEditable = true;
+          currentSelected.textContent = '';
+        } else {
+          currentSelected.innerHTML = `$$${mathText}$$`;
+          currentSelected.contentEditable = false;
+
+          // Render with MathJax
+          if (window.MathJax && window.MathJax.typesetPromise) {
+            // Clear any previous MathJax rendering
+            if (window.MathJax.typesetClear) {
+              MathJax.typesetClear([currentSelected]);
+            }
+            MathJax.typesetPromise([currentSelected]).catch((err) => {
+              console.error('MathJax rendering failed:', err);
+            });
           }
-          MathJax.typesetPromise([currentSelected]).catch((err) => {
-            console.error('MathJax rendering failed:', err);
-          });
         }
       }
 
@@ -568,6 +618,7 @@ class ArticleBuilder {
             selectedElement.contentEditable = true;
             selectedElement.innerHTML = '';
             selectedElement.textContent = selectedElement.dataset.mathText || '';
+            selectedElement.focus();
           }
         }
 
@@ -647,6 +698,44 @@ class ArticleBuilder {
         <small>Press Ctrl+D to toggle</small>
       `;
     }
+  }
+
+  updateComponentButtonsPosition() {
+    const componentButtons = document.querySelector('.component-buttons:not(.control-buttons)');
+    if (!componentButtons) return;
+
+    if (this.selectedComponent) {
+      const selectedElement = document.getElementById(this.selectedComponent);
+      if (selectedElement) {
+        // Insert after the selected component
+        selectedElement.insertAdjacentElement('afterend', componentButtons);
+      }
+    } else {
+      // Move to the end of the content area
+      this.content.appendChild(componentButtons);
+    }
+  }
+
+  getPreviousComponent(element) {
+    let sibling = element.previousElementSibling;
+    while (sibling) {
+      if (sibling.classList.contains('builder-component')) {
+        return sibling;
+      }
+      sibling = sibling.previousElementSibling;
+    }
+    return null;
+  }
+
+  getNextComponent(element) {
+    let sibling = element.nextElementSibling;
+    while (sibling) {
+      if (sibling.classList.contains('builder-component')) {
+        return sibling;
+      }
+      sibling = sibling.nextElementSibling;
+    }
+    return null;
   }
 
   rebuildLiveMarkdown() {
@@ -1092,6 +1181,8 @@ function convertComponentToMarkdown(component) {
     const codeEl = component.querySelector('code');
     const language = languageEl?.textContent.trim() || '';
     const code = codeEl?.textContent.trim() || '';
+    // Skip empty code blocks
+    if (!code) return '';
     return `\`\`\`${language}\n${code}\n\`\`\``;
   } else if (component.getAttribute('type') === 'math') {
     // For math components, check if currently editing or rendered
@@ -1103,6 +1194,8 @@ function convertComponentToMarkdown(component) {
       // Rendered - get from dataset or extract from display
       mathText = component.dataset.mathText || extractMathFromDisplay(component);
     }
+    // Skip empty math blocks
+    if (!mathText) return '';
     return `$$\n${mathText}\n$$`;
   } else if (component.tagName === 'FIGURE') {
     // Handle image components
@@ -1391,6 +1484,35 @@ function createBuilderComponent(type, content) {
     element.setAttribute('type', 'math');
   }
 
+  // Handle Enter key to create new paragraph (for paragraph, header, subheader, blockquote)
+  if (type === 'paragraph' || type === 'header' || type === 'subheader' || type === 'blockquote') {
+    element.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const builder = window.articleBuilderInstance;
+        if (builder) {
+          const newParagraph = builder.createSimpleComponent('paragraph');
+          if (newParagraph) {
+            const id = `component-${++builder.componentCounter}`;
+            newParagraph.id = id;
+            newParagraph.classList.add('builder-component');
+
+            const wrapper = element.closest('.builder-component');
+            const nextComponent = builder.getNextComponent(wrapper);
+            if (nextComponent) {
+              builder.content.insertBefore(newParagraph, nextComponent);
+            } else {
+              builder.content.appendChild(newParagraph);
+            }
+
+            builder.selectedComponent = id;
+            newParagraph.focus();
+          }
+        }
+      }
+    });
+  }
+
   if (content) {
     if (type === 'math') {
       // For math components, store the raw LaTeX and render it
@@ -1545,6 +1667,11 @@ function createBuilderCodeBlock(content) {
   const firstLine = lines[0];
   const language = firstLine.replace(/^```/, '').trim() || 'javascript';
   const code = lines.slice(1, -1).join('\n');
+
+  // Skip empty code blocks
+  if (!code || code.trim() === '') {
+    return null;
+  }
 
   const wrapper = document.createElement('div');
   wrapper.setAttribute('type', 'code');

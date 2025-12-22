@@ -39,7 +39,6 @@ function toHTML(md) {
   // e.g. paragraphs, headers, lists, blockquotes, images, links, bold, italics
   const blocks = md.split(/\n{2,}/).map(block => parseBlock(block.trim()));
   let html = blocks.join('\n\n')
-    .replace(/^### (.*$)/gim, '<div type="subheader"><h3>$1</h3></div>')
     .replace(/^## (.*$)/gim, '<div type="subheader"><h3>$1</h3></div>')
     .replace(/^# (.*$)/gim, '<div type="header"><h2>$1</h2></div>')
     .replace(/!\[(.*?)\]\((.*?)\)/gim, '<div type="image"><figure><img alt="$1" src="$2"><figcaption>$1</figcaption></figure></div>')
@@ -209,11 +208,6 @@ function toHTMLLine(md) {
     }
 
     // Headers (single line)
-    if (line.startsWith('### ')) {
-      result.push(`<div type="subheader"><h3>${line.substring(4)}</h3></div>`);
-      i++;
-      continue;
-    }
     if (line.startsWith('## ')) {
       result.push(`<div type="subheader"><h3>${line.substring(3)}</h3></div>`);
       i++;
@@ -362,13 +356,13 @@ function MarkdownToHtml(markdown) {
     if (!block) return;
 
     // Headers
-    if (block.startsWith('# ')) {
-      const content = block.substring(2);
-      html += `<div type="header"><h2>${content}</h2></div>\n`;
-    }
-    else if (block.startsWith('## ')) {
+    if (block.startsWith('## ')) {
       const content = block.substring(3);
       html += `<div type="subheader"><h3>${content}</h3></div>\n`;
+    }
+    else if (block.startsWith('# ')) {
+      const content = block.substring(2);
+      html += `<div type="header"><h2>${content}</h2></div>\n`;
     }
     // Blockquote
     else if (block.startsWith('> ')) {
