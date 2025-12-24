@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Article Platform</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+</head>
+
+<body>
+  <!-- Not logged in - Show auth forms -->
+  <div id="auth-section">
+    <div class="auth-container">
+      <h1>Article Platform</h1>
+      <p class="subtitle">Create and share your articles</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Login</button>
+        <button class="auth-tab" data-tab="signup">Sign Up</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="auth-form active">
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required autocomplete="current-password">
+        </div>
+        <div class="error-message" id="login-error"></div>
+        <button type="submit" class="auth-button">Login</button>
+      </form>
+
+      <!-- Signup Form -->
+      <form id="signup-form" class="auth-form">
+        <div class="form-group">
+          <label for="signup-username">Username</label>
+          <input type="text" id="signup-username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" required autocomplete="new-password">
+        </div>
+        <div class="error-message" id="signup-error"></div>
+        <button type="submit" class="auth-button">Create Account</button>
+      </form>
+
+      <div class="info-text">
+        Your articles will be available at:<br>
+        <strong>username.domain.com</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logged in - Show user info -->
+  <div id="user-section" style="display: none;">
+    <div class="user-info">
+      <h1>Welcome!</h1>
+      <h2 id="welcome-username"></h2>
+
+      <div class="user-actions">
+        <button class="action-btn" id="go-to-articles">View My Articles</button>
+        <button class="action-btn" id="go-to-builder">Go to Builder</button>
+        <button class="action-btn secondary" id="logout-btn">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Copyright 2025 — Contact: <a href="mailto:nader.business.mail@gmail.com">nader.business.mail@gmail.com</a>
+  </footer>
+
+  <script>
+    // ===== UI STATE MANAGEMENT =====
+
+    const UI = {
+      authSection: document.getElementById('auth-section'),
+      userSection: document.getElementById('user-section'),
+      loginForm: document.getElementById('login-form'),
+      signupForm: document.getElementById('signup-form'),
+      loginError: document.getElementById('login-error'),
+      signupError: document.getElementById('signup-error'),
+
+      showError(element, message) {
+        element.textContent = message;
+        element.classList.add('show');
+      },
+
+      hideError(element) {
+        element.classList.remove('show');
+      },
+
+      showAuthSection() {
+        this.authSection.style.display = 'block';
+        this.userSection.style.display = 'none';
+      },
+
+      showUserSection(username) {
+        this.authSection.style.display = 'none';
+        this.userSection.style.display = 'block';
+        document.getElementById('welcome-username').textContent = username;
+      }
+    };
+
+    // ===== TAB SWITCHING =====
+
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetTab = tab.dataset.tab;
+
+        // Update active tab
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Update active form
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        document.getElementById(`${targetTab}-form`).classList.add('active');
+
+        // Clear errors
+        UI.hideError(UI.loginError);
+        UI.hideError(UI.signupError);
+      });
+    });
+
+    // ===== LOGIN HANDLER =====
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      UI.hideError(UI.loginError);
+
+      if (!username || !password) {
+        UI.showError(UI.loginError, 'Please fill in all fields');
+        return;
+      }
+
+      const result = await API.Auth.login(username, password);
+
+      if (result.success) {
+        // Redirect to user's subdomain
+        PageRouter.goToViewer(username);
+      } else {
+        UI.showError(UI.loginError, result.error || 'Login failed');
+      }
+    });
+
+    // ===== SIGNUP HANDLER =====
+
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('signup-username').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+
+      UI.hideError(UI.signupError);
+
+      if (!username || !email || !password) {
+        UI.showError(UI.signupError, 'Please fill in all fields');
+        return;
+      }
+
+      // Validate username (no spaces, special chars)
+      if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+        UI.showError(UI.signupError, 'Username can only contain letters, numbers, underscores, and hyphens');
+        return;
+      }
+
+      const result = await API.Auth.signup(username, password, email);
+
+      if (result.success) {
+        // Redirect to user's subdomain
+        PageRouter.goToViewer(username);
+      } else {
+        UI.showError(UI.signupError, result.error || 'Signup failed');
+      }
+    });
+
+    // ===== USER SECTION HANDLERS =====
+
+    document.getElementById('go-to-articles').addEventListener('click', () => {
+      PageRouter.goToViewer();
+    });
+
+    document.getElementById('go-to-builder').addEventListener('click', () => {
+      PageRouter.goToBuilder();
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      Auth.logout();
+    });
+
+    // ===== INITIALIZATION =====
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Check if user is already logged in
+      if (Auth.isAuthenticated()) {
+        // Redirect to user's subdomain
+        const username = Auth.getCurrentUser();
+        window.location.href = `http://${username}.localhost:8080`;
+      } else {
+        UI.showAuthSection();
+      }
+    });
+  </script>
+</body>
+
+</html>

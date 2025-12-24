@@ -4,28 +4,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>nader0913</title>
+  <title>Article Platform</title>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/article.css">
   <link rel="stylesheet" href="css/prism-custom.css">
   <link rel="stylesheet" href="css/homepage.css">
+  <link rel="stylesheet" href="css/auth.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/markdown-converter.js"></script>
-  <script src="js/main.js"></script>
 </head>
 
 <body>
-  <h1 id="main-title">nader0913</h1>
+  <!-- Landing Page (shown on main domain - localhost:8080) -->
+  <div id="landing-content" style="display: none;">
+    <div class="auth-container">
+      <h1>Article Platform</h1>
+      <p class="subtitle">Create and share your articles</p>
 
-  <div id="blog-page">
-    <div id="main-page"></div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Login</button>
+        <button class="auth-tab" data-tab="signup">Sign Up</button>
+      </div>
+
+      <form id="login-form" class="auth-form active">
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required autocomplete="current-password">
+        </div>
+        <div class="error-message" id="login-error"></div>
+        <button type="submit" class="auth-button">Login</button>
+      </form>
+
+      <form id="signup-form" class="auth-form">
+        <div class="form-group">
+          <label for="signup-username">Username</label>
+          <input type="text" id="signup-username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" required autocomplete="new-password">
+        </div>
+        <div class="error-message" id="signup-error"></div>
+        <button type="submit" class="auth-button">Create Account</button>
+      </form>
+
+      <div class="info-text">
+        Your articles will be available at:<br>
+        <strong>username.domain.com</strong>
+      </div>
+    </div>
+
+    <footer>
+      Copyright 2025 — Contact: <a href="mailto:nader.business.mail@gmail.com">nader.business.mail@gmail.com</a>
+    </footer>
   </div>
 
-  <footer>
-    Copyright 2025 — Contact: <a href="mailto:nader.business.mail@gmail.com">nader.business.mail@gmail.com</a>
-  </footer>
+  <!-- Viewer Page (shown on user subdomain - e.g., nader0913.localhost:8080) -->
+  <div id="viewer-content" style="display: none;">
+    <!-- Article List View -->
+    <div id="list-view">
+      <h1 id="main-title"></h1>
+
+      <div class="top-actions" style="text-align: right; margin-bottom: 20px;">
+        <button id="logout-btn" class="action-button secondary" style="display: none;">Logout</button>
+        <button id="builder-mode-btn" class="action-button" style="display: none;">Builder</button>
+      </div>
+
+      <div id="blog-page">
+        <div id="main-page"></div>
+      </div>
+    </div>
+
+    <!-- Article View (clean, no buttons) -->
+    <div id="article-view" style="display: none;">
+      <div id="post-content">
+        <div class="article-top-navigation">
+          <a href="#" class="back-link" onclick="hideArticle()">&larr; Back</a>
+          <div class="article-chapter" id="article-chapter"></div>
+          <div class="article-date" id="article-date"></div>
+        </div>
+        <h1 id="article-title"></h1>
+        <div id="markdown-output"></div>
+        <div class="article-bottom-navigation">
+          <a href="#" onclick="event.preventDefault();">&larr; Previous</a>
+          <a href="#" onclick="event.preventDefault();">Next &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Copyright 2025 — Contact: <a href="mailto:nader.business.mail@gmail.com">nader.business.mail@gmail.com</a>
+    </footer>
+  </div>
+
+  <script src="js/index.js"></script>
 </body>
 
 </html>

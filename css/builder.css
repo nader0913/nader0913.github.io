@@ -355,6 +355,9 @@ figure.builder-component img {
   margin: 0 0 0.2em 0;
   color: rgba(0, 0, 0, 0.95);
   line-height: 1.3;
+  text-align: left;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .article-tag {
@@ -376,7 +379,8 @@ figure.builder-component img {
   gap: 0.3em;
 }
 
-.article-card .delete-btn {
+.article-card .delete-btn,
+.article-card .publish-toggle-btn {
   padding: 0.4em 0.7em;
   border: 1px solid #e74c3c;
   background: #fff;
@@ -386,9 +390,19 @@ figure.builder-component img {
   transition: all 0.15s ease;
 }
 
+.article-card .publish-toggle-btn {
+  border-color: rgba(0, 0, 0, 0.2);
+  color: rgba(0, 0, 0, 0.7);
+}
+
 .article-card .delete-btn:hover {
   background: rgba(231, 76, 60, 0.03);
   color: #e74c3c;
+}
+
+.article-card .publish-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: rgba(0, 0, 0, 0.9);
 }
 
 
@@ -487,10 +501,11 @@ figure.builder-component img {
   background: #fff;
   color: rgba(0, 0, 0, 0.7);
   font-size: 0.9em;
-  transition: all 0.15s ease;
   font-weight: 500;
   height: 32px;
   box-sizing: border-box;
+  min-width: 85px;
+  width: 85px;
 }
 
 .saving-indicator.saved {
@@ -539,3 +554,296 @@ figure.builder-component img {
   }
 }
 
+.publish-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.publish-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.publish-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+#publish-status {
+  color: rgba(0, 0, 0, 0.7);
+  font-weight: normal;
+}
+
+.draft-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-left: 8px;
+  font-size: 0.7em;
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: normal;
+  vertical-align: middle;
+}
+
+.publish-toggle-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.8em;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin-right: 12px;
+  transition: all 0.2s;
+}
+
+.publish-toggle-inline:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.publish-toggle-inline input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.publish-toggle-inline span {
+  color: rgba(0, 0, 0, 0.7);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-size: 0.9em;
+}
+
+.publish-toggle-inline input[type="checkbox"]:checked + span {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+/* Publish button styling */
+.publish-btn {
+  min-width: 100px !important;
+  width: 100px !important;
+}
+
+.publish-btn[data-published="true"] {
+  background: #f44336 !important;
+  color: white !important;
+}
+
+.publish-btn[data-published="true"]:hover {
+  background: #da190b !important;
+}
+
+.publish-btn[data-published="false"] {
+  background: #4CAF50 !important;
+  color: white !important;
+}
+
+.publish-btn[data-published="false"]:hover {
+  background: #45a049 !important;
+}
+
+/* Preview button fixed width */
+#preview-btn {
+  min-width: 80px !important;
+  width: 80px !important;
+}
+
+/* Articles tabs */
+.articles-tabs {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin: 3em 0 2em 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.articles-tab {
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  font-family: "EB Garamond", serif;
+  font-size: 1.1em;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.6);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.articles-tab:hover {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.articles-tab.active {
+  color: rgba(0, 0, 0, 0.87);
+  border-bottom-color: rgba(0, 0, 0, 0.87);
+}
+
+.articles-tab-content {
+  display: none;
+}
+
+.articles-tab-content.active {
+  display: block;
+}
+
+.no-articles {
+  padding: 40px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}
+
+/* Preview mode styles */
+#article-editor.preview-mode .builder-component.selected {
+  outline: none !important;
+}
+
+#article-editor.preview-mode .builder-component:hover {
+  outline: none !important;
+}
+
+#article-editor.preview-mode .selection-toolbar {
+  display: none !important;
+}
+
+#article-editor.preview-mode .article-top-navigation {
+  pointer-events: none;
+}
+
+#article-editor.preview-mode h1[contenteditable],
+#article-editor.preview-mode .article-chapter[contenteditable] {
+  cursor: default;
+}
+
+/* ===== MARKDOWN MODAL ===== */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2em;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content h2 {
+  margin: 0 0 1em 0;
+  font-size: 1.5em;
+}
+
+#markdown-display {
+  flex: 1;
+  width: 100%;
+  min-height: 400px;
+  padding: 1em;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+  resize: vertical;
+  margin-bottom: 1em;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 0.5em;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 0.5em 1.5em;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.modal-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* ===== TABLE CONTROLS ===== */
+.table-controls {
+  display: none;
+  padding: 0.5em;
+  background: rgba(250, 250, 250, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  gap: 0.75em;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.builder-component.selected .table-controls {
+  display: flex;
+}
+
+.table-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.table-controls-label {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  margin-right: 0.25em;
+}
+
+.table-control-btn {
+  padding: 0.4em 0.6em;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: white;
+  color: rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+  font-size: 13px;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+  min-width: 28px;
+  text-align: center;
+}
+
+.table-control-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.9);
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.table-control-btn:active {
+  background: rgba(0, 0, 0, 0.08);
+  transform: translateY(1px);
+}
+
+/* Hide table controls in preview mode */
+#article-editor.preview-mode .table-controls {
+  display: none !important;
+}

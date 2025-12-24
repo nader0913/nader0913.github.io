@@ -1,24 +1,29 @@
 .article-top-navigation {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   align-items: center;
   margin: 1em 0;
   padding-bottom: 1em;
   border-bottom: 1px solid #ccc;
 }
 
+.article-top-navigation .back-link {
+  justify-self: start;
+}
+
 .article-chapter {
   font-weight: bold;
   text-align: center;
+  justify-self: center;
 }
 
 .article-date {
   color: rgb(0, 0, 0, 0.6);
+  justify-self: end;
 }
 
 [type="math"] {
   margin: 2em 0;
-  font-size: 1.2em;
 }
 
 [type="code"] {
@@ -54,6 +59,12 @@
   justify-content: space-between;
   align-items: center;
   margin: 1em 0;
+  padding-top: 1em;
+  border-top: 1px solid #ccc;
+}
+
+.article-bottom-divider {
+  margin: 2em 0 1em 0;
   padding-top: 1em;
   border-top: 1px solid #ccc;
 }

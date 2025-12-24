@@ -1,0 +1,167 @@
+/* ===== AUTH & LANDING PAGE STYLES ===== */
+
+.auth-container {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 40px;
+  text-align: center;
+}
+
+.auth-container h1 {
+  margin-bottom: 10px;
+  font-size: 2.5em;
+}
+
+.auth-container .subtitle {
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 40px;
+  font-size: 1.1em;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 30px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.auth-tab {
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  font-family: "EB Garamond", serif;
+  font-size: 1.1em;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.6);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.auth-tab:hover {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.auth-tab.active {
+  color: rgba(0, 0, 0, 0.87);
+  border-bottom-color: rgba(0, 0, 0, 0.87);
+}
+
+.auth-form {
+  display: none;
+}
+
+.auth-form.active {
+  display: block;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1em;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  font-family: "EB Garamond", serif;
+  font-size: 1em;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: rgba(0, 0, 0, 0.5);
+}
+
+.auth-button {
+  width: 100%;
+  padding: 14px;
+  font-family: "EB Garamond", serif;
+  font-size: 1.1em;
+  background: rgba(0, 0, 0, 0.87);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+
+.auth-button:hover {
+  background: rgba(0, 0, 0, 1);
+}
+
+.auth-button:disabled {
+  background: rgba(0, 0, 0, 0.3);
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 0.9em;
+  margin-top: 10px;
+  display: none;
+}
+
+.error-message.show {
+  display: block;
+}
+
+.info-text {
+  margin-top: 30px;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.95em;
+  line-height: 1.6;
+}
+
+/* Logged in state */
+.user-info {
+  max-width: 500px;
+  margin: 100px auto;
+  text-align: center;
+}
+
+.user-info h2 {
+  border-bottom: none;
+  margin-bottom: 30px;
+}
+
+.user-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.action-btn {
+  padding: 14px 28px;
+  font-family: "EB Garamond", serif;
+  font-size: 1.1em;
+  background: rgba(0, 0, 0, 0.87);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.action-btn:hover {
+  background: rgba(0, 0, 0, 1);
+}
+
+.action-btn.secondary {
+  background: white;
+  color: rgba(0, 0, 0, 0.87);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.action-btn.secondary:hover {
+  background: rgba(0, 0, 0, 0.05);
+}

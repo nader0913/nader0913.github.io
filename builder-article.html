@@ -12,6 +12,9 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
 </head>
 
 <body>
@@ -20,19 +23,18 @@
         <!-- Control Buttons -->
         <div class="component-buttons control-buttons">
             <div class="button-row button-row-controls">
-                <button onclick="exportArticle()" class="component-btn active action-btn">Export</button>
-                <button onclick="viewMarkdown()" class="component-btn active action-btn">View Markdown</button>
-                <button onclick="clearAll()" class="component-btn active action-btn clear-btn">Clear</button>
                 <div id="saving-indicator" class="saving-indicator">
                     <span class="saving-text">Saved</span>
                 </div>
+                <button id="preview-btn" onclick="togglePreviewMode()" class="component-btn active action-btn">Preview</button>
+                <button onclick="showMarkdownModal()" class="component-btn active action-btn">Export</button>
             </div>
         </div>
 
         <div class="article-top-navigation">
             <a href="#" class="back-link" onclick="showBuilderHomepage()">&larr; Back</a>
             <div class="article-chapter" contenteditable="true" data-placeholder="Chapter">Chapter</div>
-            <div class="article-date" contenteditable="true" data-placeholder="Date">Dec 25, 2024</div>
+            <div class="article-date"></div>
         </div>
         <h1 contenteditable="true" data-placeholder="Untitled Article">Untitled Article</h1>
         <div id="markdown-output"></div>
@@ -56,6 +58,23 @@
                 <button id="delete-btn" class="component-btn delete-btn" title="Delete Selected Component">×</button>
                 <button id="move-up-btn" class="component-btn" title="Move Up">↑</button>
                 <button id="move-down-btn" class="component-btn" title="Move Down">↓</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+      Copyright 2025 — Contact: <a href="mailto:nader.business.mail@gmail.com">nader.business.mail@gmail.com</a>
+    </footer>
+
+    <!-- Markdown Modal -->
+    <div id="markdown-modal" class="modal">
+        <div class="modal-content">
+            <h2>Markdown</h2>
+            <textarea id="markdown-display" readonly></textarea>
+            <div class="modal-buttons">
+                <button onclick="downloadMarkdown()" class="modal-btn">Download</button>
+                <button onclick="copyMarkdown()" class="modal-btn">Copy</button>
+                <button onclick="closeMarkdownModal()" class="modal-btn">Close</button>
             </div>
         </div>
     </div>

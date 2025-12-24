@@ -62,6 +62,32 @@ class ArticleBuilder {
     this.componentCounter = maxCounter;
   }
 
+  renumberComponents() {
+    // Renumber all components sequentially from 1
+    const components = this.content.querySelectorAll('.builder-component[id^="component-"]');
+    const selectedId = this.selectedComponent;
+    let newSelectedId = null;
+
+    components.forEach((comp, index) => {
+      const newId = `component-${index + 1}`;
+
+      // Track the selected component's new ID
+      if (comp.id === selectedId) {
+        newSelectedId = newId;
+      }
+
+      comp.id = newId;
+    });
+
+    // Update the selected component reference
+    if (newSelectedId) {
+      this.selectedComponent = newSelectedId;
+    }
+
+    // Update the counter to the new max
+    this.componentCounter = components.length;
+  }
+
   setupAutoSave() {
     // Listen for content changes
     const observeChanges = () => {
@@ -146,18 +172,18 @@ class ArticleBuilder {
     }
   }
 
-  createNewArticle() {
-    const articleData = LocalStorageManager.getCurrentArticleData();
-    this.currentArticleId = LocalStorageManager.saveArticle(articleData);
+  async createNewArticle() {
+    const articleData = StorageManager.getCurrentArticleData();
+    this.currentArticleId = await StorageManager.saveArticle(articleData);
     renderSavedArticles(); // Refresh homepage
   }
 
-  updateCurrentArticle() {
+  async updateCurrentArticle() {
     if (!this.currentArticleId) return;
 
-    const articleData = LocalStorageManager.getCurrentArticleData();
+    const articleData = StorageManager.getCurrentArticleData();
     articleData.id = this.currentArticleId;
-    LocalStorageManager.saveArticle(articleData);
+    await StorageManager.saveArticle(articleData);
     renderSavedArticles(); // Refresh homepage
   }
 
@@ -189,7 +215,7 @@ class ArticleBuilder {
         this.hasUnsavedChanges = false;
         break;
       case 'unsaved':
-        this.savingText.textContent = 'Unsaved changes';
+        this.savingText.textContent = 'Saving...';
         this.hasUnsavedChanges = true;
         break;
       case 'error':
@@ -214,6 +240,7 @@ class ArticleBuilder {
           if (element) {
             element.remove();
             this.selectedComponent = null;
+            this.renumberComponents();
           }
         }
       });
@@ -228,6 +255,7 @@ class ArticleBuilder {
           const prevComponent = this.getPreviousComponent(element);
           if (element && prevComponent) {
             this.content.insertBefore(element, prevComponent);
+            this.renumberComponents();
             this.updateComponentButtonsPosition();
           }
         }
@@ -243,6 +271,7 @@ class ArticleBuilder {
           const nextComponent = this.getNextComponent(element);
           if (element && nextComponent) {
             this.content.insertBefore(nextComponent, element);
+            this.renumberComponents();
             this.updateComponentButtonsPosition();
           }
         }
@@ -505,7 +534,11 @@ class ArticleBuilder {
 
   createTable() {
     const wrapper = document.createElement('div');
-    wrapper.className = 'table-wrapper';
+    wrapper.className = 'table-component';
+    wrapper.setAttribute('type', 'table');
+
+    const scrollWrapper = document.createElement('div');
+    scrollWrapper.className = 'table-scroll-wrapper';
 
     const table = document.createElement('table');
 
@@ -514,7 +547,7 @@ class ArticleBuilder {
     for (let i = 0; i < 3; i++) {
       const th = document.createElement('th');
       th.contentEditable = true;
-      th.setAttribute('data-placeholder', `Header ${i + 1}`);
+      th.setAttribute('data-placeholder', 'Cell');
       headerRow.appendChild(th);
     }
     thead.appendChild(headerRow);
@@ -525,7 +558,7 @@ class ArticleBuilder {
       for (let j = 0; j < 3; j++) {
         const td = document.createElement('td');
         td.contentEditable = true;
-        td.setAttribute('data-placeholder', `Cell ${i + 1},${j + 1}`);
+        td.setAttribute('data-placeholder', 'Cell');
         row.appendChild(td);
       }
       tbody.appendChild(row);
@@ -533,9 +566,147 @@ class ArticleBuilder {
 
     table.appendChild(thead);
     table.appendChild(tbody);
-    wrapper.appendChild(table);
+    scrollWrapper.appendChild(table);
+    wrapper.appendChild(scrollWrapper);
+
+    // Create table controls
+    const controls = this.createTableControls();
+    wrapper.appendChild(controls);
 
     return wrapper;
+  }
+
+  createTableControls() {
+    const controls = document.createElement('div');
+    controls.className = 'table-controls';
+    controls.contentEditable = false;
+
+    controls.innerHTML = `
+      <div class="table-controls-group">
+        <span class="table-controls-label">Row:</span>
+        <button class="table-control-btn" data-action="add-row" title="Add Row">+</button>
+        <button class="table-control-btn" data-action="delete-row" title="Delete Row">−</button>
+      </div>
+      <div class="table-controls-group">
+        <span class="table-controls-label">Column:</span>
+        <button class="table-control-btn" data-action="add-col" title="Add Column">+</button>
+        <button class="table-control-btn" data-action="delete-col" title="Delete Column">−</button>
+      </div>
+    `;
+
+    // Add event listeners
+    controls.addEventListener('mousedown', (e) => {
+      // Prevent losing focus on the table cell
+      e.preventDefault();
+    });
+
+    controls.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const btn = e.target.closest('.table-control-btn');
+      if (btn) {
+        const action = btn.dataset.action;
+        const wrapper = controls.closest('.table-component');
+        this.handleTableAction(wrapper, action);
+      }
+    });
+
+    return controls;
+  }
+
+  handleTableAction(wrapper, action) {
+    const table = wrapper.querySelector('.table-scroll-wrapper table');
+    const tbody = table.querySelector('tbody');
+    const thead = table.querySelector('thead');
+
+    switch (action) {
+      case 'add-row':
+        this.addTableRow(table, tbody, 'after');
+        break;
+      case 'delete-row':
+        this.deleteTableRow(tbody);
+        break;
+      case 'add-col':
+        this.addTableColumn(table, 'after');
+        break;
+      case 'delete-col':
+        this.deleteTableColumn(table);
+        break;
+    }
+  }
+
+  addTableRow(table, tbody, position) {
+    const headerRow = table.querySelector('thead tr');
+    const colCount = headerRow.children.length;
+    const newRow = document.createElement('tr');
+
+    for (let i = 0; i < colCount; i++) {
+      const td = document.createElement('td');
+      td.contentEditable = true;
+      td.setAttribute('data-placeholder', 'Cell');
+      newRow.appendChild(td);
+    }
+
+    if (position === 'before' && tbody.firstChild) {
+      tbody.insertBefore(newRow, tbody.firstChild);
+    } else {
+      tbody.appendChild(newRow);
+    }
+  }
+
+  deleteTableRow(tbody) {
+    if (tbody.children.length > 1) {
+      tbody.removeChild(tbody.lastChild);
+    } else {
+      alert('Table must have at least one row');
+    }
+  }
+
+  addTableColumn(table, position) {
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    const headerRow = thead.querySelector('tr');
+
+    // Add header cell
+    const th = document.createElement('th');
+    th.contentEditable = true;
+    th.setAttribute('data-placeholder', 'Cell');
+
+    if (position === 'before' && headerRow.firstChild) {
+      headerRow.insertBefore(th, headerRow.firstChild);
+    } else {
+      headerRow.appendChild(th);
+    }
+
+    // Add cells to all body rows (one cell per row regardless of merges)
+    Array.from(tbody.querySelectorAll('tr')).forEach(row => {
+      const td = document.createElement('td');
+      td.contentEditable = true;
+      td.setAttribute('data-placeholder', 'Cell');
+
+      if (position === 'before' && row.firstChild) {
+        row.insertBefore(td, row.firstChild);
+      } else {
+        row.appendChild(td);
+      }
+    });
+  }
+
+  deleteTableColumn(table) {
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    const headerRow = thead.querySelector('tr');
+
+    if (headerRow.children.length > 1) {
+      // Remove last header cell
+      headerRow.removeChild(headerRow.lastChild);
+
+      // Remove last cell from each body row
+      Array.from(tbody.querySelectorAll('tr')).forEach(row => {
+        row.removeChild(row.lastChild);
+      });
+    } else {
+      alert('Table must have at least one column');
+    }
   }
 
   setupComponentSelection() {
@@ -643,9 +814,25 @@ class ArticleBuilder {
     const moveDownBtn = document.getElementById('move-down-btn');
 
     if (this.selectedComponent) {
+      const selectedElement = document.getElementById(this.selectedComponent);
+      const prevComponent = this.getPreviousComponent(selectedElement);
+      const nextComponent = this.getNextComponent(selectedElement);
+
       deleteBtn?.classList.add('active');
-      moveUpBtn?.classList.add('active');
-      moveDownBtn?.classList.add('active');
+
+      // Enable up button only if there's a previous component
+      if (prevComponent) {
+        moveUpBtn?.classList.add('active');
+      } else {
+        moveUpBtn?.classList.remove('active');
+      }
+
+      // Enable down button only if there's a next component
+      if (nextComponent) {
+        moveDownBtn?.classList.add('active');
+      } else {
+        moveDownBtn?.classList.remove('active');
+      }
     } else {
       deleteBtn?.classList.remove('active');
       moveUpBtn?.classList.remove('active');
@@ -831,6 +1018,14 @@ class ArticleBuilder {
 
     document.addEventListener('selectionchange', () => {
       const selection = window.getSelection();
+      const articleEditor = document.getElementById('article-editor');
+      const isPreviewMode = articleEditor && articleEditor.classList.contains('preview-mode');
+
+      // Hide toolbar if in preview mode
+      if (isPreviewMode) {
+        this.toolbar.style.display = 'none';
+        return;
+      }
 
       if (selection.rangeCount > 0 && !selection.isCollapsed) {
         const range = selection.getRangeAt(0);
@@ -883,42 +1078,70 @@ class ArticleBuilder {
   }
 }
 
-// ===== LOCAL STORAGE UTILITIES =====
-const LocalStorageManager = {
-  STORAGE_KEY: 'saved_articles',
-
-  saveArticle(articleData) {
-    const articles = this.getAllArticles();
+// ===== STORAGE MANAGER (uses API abstraction layer) =====
+const StorageManager = {
+  async saveArticle(articleData) {
     const articleId = articleData.id || this.generateId();
+
+    // Create slug from title
+    const slug = articleData.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
 
     const article = {
       id: articleId,
+      slug: slug,
       title: articleData.title,
       date: articleData.date,
-      tag: articleData.tag,
-      content: articleData.content,
+      chapter: articleData.tag, // Map tag to chapter
+      markdown: articleData.content,
+      published: articleData.published !== undefined ? articleData.published : false, // Default to false (draft)
       timestamp: Date.now()
     };
 
-    articles[articleId] = article;
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(articles));
-    return articleId;
+    const result = await API.Articles.save(article);
+    return result.success ? articleId : null;
   },
 
-  getAllArticles() {
-    const stored = localStorage.getItem(this.STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
+  async getAllArticles() {
+    const articles = await API.Articles.getAll();
+
+    // Convert array to object for compatibility
+    const articlesObj = {};
+    articles.forEach(article => {
+      articlesObj[article.id] = {
+        id: article.id,
+        title: article.title,
+        date: article.date,
+        tag: article.chapter,
+        content: article.markdown,
+        published: article.published !== undefined ? article.published : false,
+        timestamp: article.timestamp
+      };
+    });
+
+    return articlesObj;
   },
 
-  getArticle(id) {
-    const articles = this.getAllArticles();
-    return articles[id] || null;
+  async getArticle(id) {
+    const article = await API.Articles.getById(id);
+
+    if (!article) return null;
+
+    return {
+      id: article.id,
+      title: article.title,
+      date: article.date,
+      tag: article.chapter,
+      content: article.markdown,
+      published: article.published !== undefined ? article.published : false,
+      timestamp: article.timestamp
+    };
   },
 
-  deleteArticle(id) {
-    const articles = this.getAllArticles();
-    delete articles[id];
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(articles));
+  async deleteArticle(id) {
+    await API.Articles.delete(id);
   },
 
   generateId() {
@@ -929,15 +1152,17 @@ const LocalStorageManager = {
     const titleElement = document.querySelector('h1');
     const dateElement = document.querySelector('.article-date');
     const chapterElement = document.querySelector('.article-chapter');
+    const publishBtn = document.getElementById('publish-btn');
 
     const title = titleElement?.textContent?.trim() || 'Untitled Article';
-    const date = dateElement?.textContent?.trim() || new Date().toLocaleDateString();
+    const date = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
     const tag = chapterElement?.textContent?.trim() || 'General';
+    const published = publishBtn ? publishBtn.dataset.published === 'true' : false;
 
     // Use live markdown from builder instance
     const content = window.articleBuilderInstance?.liveMarkdown || generateMarkdownFromBuilder();
 
-    return { title, date, tag, content };
+    return { title, date, tag, content, published };
   }
 };
 
@@ -957,7 +1182,7 @@ function showArticleEditor() {
   window.location.href = '/builder-article.html';
 }
 
-function exportArticle() {
+function generateMarkdown() {
   const outputContainer = document.getElementById('markdown-output');
   const titleElement = document.querySelector('h1');
   const chapterElement = document.querySelector('.article-chapter');
@@ -996,7 +1221,25 @@ function exportArticle() {
     }
   });
 
-  // Create and download the file
+  return { markdown, title };
+}
+
+function showMarkdownModal() {
+  const { markdown } = generateMarkdown();
+  const modal = document.getElementById('markdown-modal');
+  const display = document.getElementById('markdown-display');
+
+  display.value = markdown;
+  modal.classList.add('active');
+}
+
+function closeMarkdownModal() {
+  const modal = document.getElementById('markdown-modal');
+  modal.classList.remove('active');
+}
+
+function downloadMarkdown() {
+  const { markdown, title } = generateMarkdown();
   const blob = new Blob([markdown], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1008,8 +1251,28 @@ function exportArticle() {
   URL.revokeObjectURL(url);
 }
 
-function loadArticle(articleId) {
-  const article = LocalStorageManager.getArticle(articleId);
+async function copyMarkdown() {
+  const display = document.getElementById('markdown-display');
+
+  try {
+    await navigator.clipboard.writeText(display.value);
+
+    // Show feedback
+    const copyBtn = window.event?.target;
+    if (copyBtn) {
+      const originalText = copyBtn.textContent;
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        copyBtn.textContent = originalText;
+      }, 2000);
+    }
+  } catch (err) {
+    console.error('Failed to copy:', err);
+  }
+}
+
+async function loadArticle(articleId) {
+  const article = await StorageManager.getArticle(articleId);
   if (!article) {
     console.warn('Article not found with ID:', articleId);
     return;
@@ -1024,8 +1287,18 @@ function loadArticle(articleId) {
   const chapterElement = document.querySelector('.article-chapter');
 
   if (titleElement) titleElement.textContent = article.title;
-  if (dateElement) dateElement.textContent = article.date;
+  if (dateElement) dateElement.textContent = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
   if (chapterElement) chapterElement.textContent = article.tag;
+
+  // Set publish status
+  const publishBtn = document.getElementById('publish-btn');
+  if (publishBtn) {
+    const isPublished = article.published !== false;
+    console.log('Loading article, published value:', article.published, 'isPublished:', isPublished);
+    publishBtn.textContent = isPublished ? 'Unpublish' : 'Publish';
+    publishBtn.dataset.published = String(isPublished);
+    console.log('Button text:', publishBtn.textContent, 'data-published:', publishBtn.dataset.published);
+  }
 
   // Load content
   if (article.content) {
@@ -1043,6 +1316,22 @@ function loadArticle(articleId) {
   // Article loaded successfully
 }
 
+function togglePublishButton() {
+  const publishBtn = document.getElementById('publish-btn');
+  if (!publishBtn) return;
+
+  const isCurrentlyPublished = publishBtn.dataset.published === 'true';
+  const newPublishState = !isCurrentlyPublished;
+
+  publishBtn.textContent = newPublishState ? 'Unpublish' : 'Publish';
+  publishBtn.dataset.published = String(newPublishState);
+
+  // Trigger autosave to save the publish status
+  if (window.articleBuilderInstance) {
+    window.articleBuilderInstance.triggerAutoSave();
+  }
+}
+
 function createNewArticle() {
   // Clear the editor for a new article
   document.getElementById('markdown-output').innerHTML = '';
@@ -1053,8 +1342,15 @@ function createNewArticle() {
   const chapterElement = document.querySelector('.article-chapter');
 
   if (titleElement) titleElement.textContent = 'Untitled Article';
-  if (dateElement) dateElement.textContent = new Date().toLocaleDateString();
+  if (dateElement) dateElement.textContent = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
   if (chapterElement) chapterElement.textContent = 'Chapter';
+
+  // Reset publish button to draft (default for new articles)
+  const publishBtn = document.getElementById('publish-btn');
+  if (publishBtn) {
+    publishBtn.textContent = 'Publish';
+    publishBtn.dataset.published = 'false';
+  }
 
   // Clear the current article ID so auto-save creates a new one
   if (window.articleBuilderInstance) {
@@ -1084,48 +1380,87 @@ function getRelativeTime(timestamp) {
   return `${months} ${months === 1 ? 'month' : 'months'} ago`;
 }
 
-function renderSavedArticles() {
-  const articles = LocalStorageManager.getAllArticles();
-  const articlesContainer = document.getElementById('articles-list');
+async function renderSavedArticles() {
+  const articles = await StorageManager.getAllArticles();
+  const publishedContainer = document.getElementById('published-articles-list');
+  const draftContainer = document.getElementById('draft-articles-list');
 
-  if (!articlesContainer) return;
+  if (!publishedContainer || !draftContainer) return;
 
   // Clear existing content
-  articlesContainer.innerHTML = '';
+  publishedContainer.innerHTML = '';
+  draftContainer.innerHTML = '';
 
   const articleIds = Object.keys(articles).sort((a, b) => articles[b].timestamp - articles[a].timestamp);
 
   if (articleIds.length === 0) {
-    articlesContainer.innerHTML = '<div class="no-articles">No saved articles yet. Create your first article!</div>';
+    publishedContainer.innerHTML = '<div class="no-articles">No published articles yet.</div>';
+    draftContainer.innerHTML = '<div class="no-articles">No drafts yet.</div>';
     return;
   }
 
+  // Split articles into published and drafts
+  const published = [];
+  const drafts = [];
+
   articleIds.forEach(id => {
     const article = articles[id];
-    const articleCard = document.createElement('div');
-    articleCard.className = 'article-card';
-    articleCard.style.cursor = 'pointer';
-    articleCard.onclick = () => loadSavedArticle(id);
+    if (article.published !== false) {
+      published.push({ id, article });
+    } else {
+      drafts.push({ id, article });
+    }
+  });
 
-    // Format relative time
-    const timeAgo = getRelativeTime(article.timestamp);
+  // Render published articles
+  if (published.length === 0) {
+    publishedContainer.innerHTML = '<div class="no-articles">No published articles yet.</div>';
+  } else {
+    published.forEach(({ id, article }) => {
+      const articleCard = createArticleCard(id, article);
+      publishedContainer.appendChild(articleCard);
+    });
+  }
 
-    articleCard.innerHTML = `
-      <div class="article-row">
-        <div class="article-info">
-          <h3>${article.title}</h3>
-          <span class="article-tag">${article.tag}</span>
-        </div>
-        <div class="article-actions">
-          <span class="article-date">Updated ${timeAgo}</span>
-          <div class="article-card-actions">
-            <button class="delete-btn" onclick="event.stopPropagation(); deleteSavedArticle('${id}')">Delete</button>
-          </div>
+  // Render draft articles
+  if (drafts.length === 0) {
+    draftContainer.innerHTML = '<div class="no-articles">No drafts yet.</div>';
+  } else {
+    drafts.forEach(({ id, article }) => {
+      const articleCard = createArticleCard(id, article);
+      draftContainer.appendChild(articleCard);
+    });
+  }
+}
+
+function createArticleCard(id, article) {
+  const articleCard = document.createElement('div');
+  articleCard.className = 'article-card';
+  articleCard.style.cursor = 'pointer';
+  articleCard.onclick = () => loadSavedArticle(id);
+
+  // Format relative time
+  const timeAgo = getRelativeTime(article.timestamp);
+
+  const publishText = article.published ? 'Unpublish' : 'Publish';
+
+  articleCard.innerHTML = `
+    <div class="article-row">
+      <div class="article-info">
+        <h3>${article.title}</h3>
+        <span class="article-tag">${article.tag}</span>
+      </div>
+      <div class="article-actions">
+        <span class="article-date">Updated ${timeAgo}</span>
+        <div class="article-card-actions">
+          <button class="delete-btn" onclick="event.stopPropagation(); deleteSavedArticle('${id}')">Delete</button>
+          <button class="publish-toggle-btn" onclick="event.stopPropagation(); togglePublish('${id}', ${!article.published})">${publishText}</button>
         </div>
       </div>
-    `;
-    articlesContainer.appendChild(articleCard);
-  });
+    </div>
+  `;
+
+  return articleCard;
 }
 
 function loadSavedArticle(articleId) {
@@ -1135,18 +1470,48 @@ function loadSavedArticle(articleId) {
   window.location.href = '/builder-article.html';
 }
 
-function deleteSavedArticle(articleId) {
-  const article = LocalStorageManager.getArticle(articleId);
+async function deleteSavedArticle(articleId) {
+  const article = await StorageManager.getArticle(articleId);
   if (article && confirm(`Are you sure you want to delete "${article.title}"?`)) {
-    LocalStorageManager.deleteArticle(articleId);
+    await StorageManager.deleteArticle(articleId);
     renderSavedArticles();
+  }
+}
+
+async function togglePublish(articleId, isPublished) {
+  const article = await StorageManager.getArticle(articleId);
+  if (article) {
+    article.published = isPublished;
+    await StorageManager.saveArticle({
+      id: articleId,
+      title: article.title,
+      date: article.date,
+      tag: article.tag,
+      content: article.content,
+      published: isPublished
+    });
+    // Re-render the articles list to move between Published/Draft sections
+    await renderSavedArticles();
   }
 }
 
 function clearAll() {
   if (confirm('Are you sure you want to clear all content?')) {
-    document.getElementById('markdown-output').innerHTML = '';
-    // Article content cleared
+    const outputContainer = document.getElementById('markdown-output');
+    const componentButtons = document.querySelector('.component-buttons:not(.control-buttons)');
+
+    // Remove all content
+    outputContainer.innerHTML = '';
+
+    // Keep component buttons at the end (they get auto-appended back)
+    if (componentButtons) {
+      outputContainer.appendChild(componentButtons);
+    }
+
+    // Clear selection
+    if (window.articleBuilderInstance) {
+      window.articleBuilderInstance.selectedComponent = null;
+    }
   }
 }
 
@@ -1173,7 +1538,7 @@ function convertComponentToMarkdown(component) {
     return lines.map(line => `> ${line}`).join('\n');
   } else if (component.tagName === 'UL' || component.tagName === 'OL') {
     return convertListToMarkdown(component);
-  } else if (className.includes('table-wrapper')) {
+  } else if (className.includes('table-component') || className.includes('table-wrapper')) {
     const table = component.querySelector('table');
     return convertTableToMarkdown(table);
   } else if (component.getAttribute('type') === 'code') {
@@ -1581,7 +1946,11 @@ function createBuilderList(listType, content) {
 
 function createBuilderTable(content) {
   const wrapper = document.createElement('div');
-  wrapper.className = 'table-wrapper';
+  wrapper.className = 'table-component';
+  wrapper.setAttribute('type', 'table');
+
+  const scrollWrapper = document.createElement('div');
+  scrollWrapper.className = 'table-scroll-wrapper';
 
   const table = document.createElement('table');
   const lines = content.split('\n').filter(line => line.trim());
@@ -1595,7 +1964,7 @@ function createBuilderTable(content) {
     const th = document.createElement('th');
     th.contentEditable = true;
     th.innerHTML = convertMarkdownToHtml(headerText);
-    th.setAttribute('data-placeholder', 'Header');
+    th.setAttribute('data-placeholder', 'Cell');
     headerRow.appendChild(th);
   });
   thead.appendChild(headerRow);
@@ -1618,9 +1987,18 @@ function createBuilderTable(content) {
 
   table.appendChild(thead);
   table.appendChild(tbody);
-  wrapper.appendChild(table);
+  scrollWrapper.appendChild(table);
+  wrapper.appendChild(scrollWrapper);
+
+  // Create table controls
+  if (window.articleBuilderInstance) {
+    const controls = window.articleBuilderInstance.createTableControls();
+    wrapper.appendChild(controls);
+  }
+
   return wrapper;
 }
+
 
 function createBuilderImage(markdown) {
   // Parse markdown image: ![alt text](url)
@@ -1710,41 +2088,107 @@ function createBuilderCodeBlock(content) {
   return wrapper;
 }
 
+function togglePreviewMode() {
+  const previewBtn = document.getElementById('preview-btn');
+  const isCurrentlyPreview = previewBtn.textContent === 'Edit';
+
+  if (isCurrentlyPreview) {
+    // Switch to edit mode
+    previewBtn.textContent = 'Preview';
+    setEditMode(true);
+  } else {
+    // Switch to preview mode
+    previewBtn.textContent = 'Edit';
+    setEditMode(false);
+  }
+}
+
+function previewHomepage() {
+  const username = Auth.getCurrentUser();
+  if (username) {
+    window.location.href = `http://${username}.localhost:8080`;
+  }
+}
+
 function setEditMode(isEditMode) {
   const articleEditor = document.getElementById('article-editor');
   const outputContainer = document.getElementById('markdown-output');
-  const componentButtons = document.querySelector('.component-buttons');
+  const componentButtons = document.querySelectorAll('.component-buttons');
+  const controlButtons = document.querySelector('.control-buttons');
+  const titleElement = document.querySelector('h1');
+  const chapterElement = document.querySelector('.article-chapter');
 
   if (isEditMode) {
     // Enable edit mode
     articleEditor.classList.remove('preview-mode');
     outputContainer.classList.remove('preview-mode');
-    if (componentButtons) componentButtons.style.display = 'flex';
+
+    // Show all component buttons except control buttons
+    componentButtons.forEach(btn => {
+      if (!btn.classList.contains('control-buttons')) {
+        btn.style.display = 'flex';
+      }
+    });
 
     // Make all elements contentEditable
+    if (titleElement) titleElement.contentEditable = true;
+    if (chapterElement) chapterElement.contentEditable = true;
+
     outputContainer.querySelectorAll('[contenteditable]').forEach(el => {
       el.contentEditable = true;
     });
     outputContainer.querySelectorAll('.builder-component').forEach(el => {
-      el.contentEditable = true;
+      if (el.getAttribute('type') !== 'code' && el.getAttribute('type') !== 'math') {
+        el.contentEditable = true;
+      }
     });
   } else {
     // Enable preview mode
     articleEditor.classList.add('preview-mode');
     outputContainer.classList.add('preview-mode');
-    if (componentButtons) componentButtons.style.display = 'none';
+
+    // Hide all component buttons except control buttons
+    componentButtons.forEach(btn => {
+      if (!btn.classList.contains('control-buttons')) {
+        btn.style.display = 'none';
+      }
+    });
 
     // Disable contentEditable
+    if (titleElement) titleElement.contentEditable = false;
+    if (chapterElement) chapterElement.contentEditable = false;
+
     outputContainer.querySelectorAll('[contenteditable]').forEach(el => {
       el.contentEditable = false;
     });
     outputContainer.querySelectorAll('.builder-component').forEach(el => {
       el.contentEditable = false;
     });
+
+    // Remove selection
+    if (window.articleBuilderInstance) {
+      window.articleBuilderInstance.selectedComponent = null;
+    }
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // ===== AUTH CHECK =====
+  if (!Auth.isAuthenticated()) {
+    window.location.href = '/';
+    return;
+  }
+
+  // Check subdomain ownership for builder mode
+  const subdomain = SubdomainUtils.getUsername();
+  const currentUser = Auth.getCurrentUser();
+
+  if (subdomain && subdomain !== currentUser) {
+    alert('You can only edit your own subdomain');
+    window.location.href = '/';
+    return;
+  }
+
   // Check if we're on the editor page
   const articleEditor = document.getElementById('article-editor');
   if (articleEditor) {
@@ -1753,7 +2197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if there's an article to load
     const articleToLoad = localStorage.getItem('article_to_load');
     if (articleToLoad) {
-      loadArticle(articleToLoad);
+      await loadArticle(articleToLoad);
       localStorage.removeItem('article_to_load');
     } else {
       // Check if there's markdown to import
@@ -1765,7 +2209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Try to restore the last article being edited
         const lastArticleId = localStorage.getItem('current_article_id');
         if (lastArticleId) {
-          loadArticle(lastArticleId);
+          await loadArticle(lastArticleId);
         } else {
           // Create new article if nothing to load
           createNewArticle();
@@ -1775,7 +2219,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Load saved articles on homepage
-  renderSavedArticles();
+  await renderSavedArticles();
 
   // Setup homepage button listeners
   const newArticleBtn = document.getElementById('new-article-btn');
@@ -1827,4 +2271,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Setup articles tab listeners
+  const articlesTabs = document.querySelectorAll('.articles-tab');
+  if (articlesTabs.length > 0) {
+    articlesTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetTab = tab.dataset.tab;
+
+        // Update tab buttons
+        articlesTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Update tab content
+        document.querySelectorAll('.articles-tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        const contentId = targetTab === 'published' ? 'published-content' : 'drafts-content';
+        document.getElementById(contentId).classList.add('active');
+      });
+    });
+  }
+
+});
+// ===== PUBLISH TOGGLE HANDLER =====
+document.addEventListener('DOMContentLoaded', () => {
+  const publishCheckbox = document.getElementById('publish-checkbox');
+  const publishStatus = document.getElementById('publish-status');
+  
+  if (publishCheckbox && publishStatus) {
+    publishCheckbox.addEventListener('change', () => {
+      publishStatus.textContent = publishCheckbox.checked ? 'Published' : 'Draft';
+    });
+  }
 });
