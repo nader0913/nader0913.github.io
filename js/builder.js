@@ -2106,7 +2106,9 @@ function togglePreviewMode() {
 function previewHomepage() {
   const username = Auth.getCurrentUser();
   if (username) {
-    window.location.href = `http://${username}.localhost:8080`;
+    const protocol = window.location.protocol;
+    const domain = CONFIG.app.domain;
+    window.location.href = `${protocol}//${username}.${domain}`;
   }
 }
 

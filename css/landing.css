@@ -1,0 +1,256 @@
+/* Landing Page Styles */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
+  background: #ffffff;
+  color: #000000;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.hero {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.hero-content {
+  max-width: 800px;
+}
+
+.hero h1 {
+  font-size: clamp(3rem, 10vw, 6rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 1.5rem;
+}
+
+.hero p {
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-weight: 400;
+  color: #666666;
+  margin-bottom: 3rem;
+  line-height: 1.4;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 1rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: 2px solid #000000;
+  background: #000000;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn:hover {
+  background: #ffffff;
+  color: #000000;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #000000;
+}
+
+.btn-secondary:hover {
+  background: #000000;
+  color: #ffffff;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  margin-top: 4rem;
+  padding-top: 4rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.feature {
+  text-align: left;
+}
+
+.feature h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.feature p {
+  font-size: 0.875rem;
+  color: #666666;
+  margin: 0;
+}
+
+footer {
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #666666;
+  border-top: 1px solid #e0e0e0;
+}
+
+footer a {
+  color: #000000;
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* Auth Modal */
+.auth-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-modal.active {
+  display: flex;
+}
+
+.auth-modal .auth-container {
+  background: #ffffff;
+  padding: 3rem;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+  margin: 0;
+}
+
+.close-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666666;
+  font-family: Arial, sans-serif;
+}
+
+.close-modal:hover {
+  color: #000000;
+}
+
+.auth-modal .auth-container h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  border: none;
+  text-align: center;
+}
+
+.auth-modal .auth-container .subtitle {
+  color: #666666;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.auth-modal .auth-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #e0e0e0;
+  justify-content: flex-start;
+}
+
+.auth-modal .auth-tab {
+  background: none;
+  border: none;
+  padding: 0.75rem 0;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #666666;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
+}
+
+.auth-modal .auth-tab.active {
+  color: #000000;
+  border-bottom-color: #000000;
+}
+
+.auth-modal .form-group {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.auth-modal .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.auth-modal .form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.auth-modal .form-group input:focus {
+  outline: none;
+  border-color: #000000;
+}
+
+.auth-modal .auth-button {
+  width: 100%;
+  padding: 1rem;
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
+}
+
+.auth-modal .auth-button:hover {
+  background: #333333;
+}
+
+.auth-modal .info-text {
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: #666666;
+  text-align: center;
+  line-height: 1.6;
+}

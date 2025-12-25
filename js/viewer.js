@@ -84,6 +84,7 @@ const PostLoader = {
     DOM.get('article-chapter').textContent = Array.isArray(post.tags) ? post.tags.join(' • ') : (post.tags || post.chapter || '');
     DOM.get('article-title').textContent = post.title;
     DOM.get('article-date').textContent = post.date || '';
+    document.title = `${post.title} - Pluma`;
 
     // Apply syntax highlighting if there are code blocks
     if (window.Prism) {
@@ -208,6 +209,7 @@ async function loadArticles() {
 
   // Update title
   DOM.get('main-title').textContent = currentUsername;
+  document.title = `${currentUsername} - Pluma`;
 
   // Render posts
   const mainPage = DOM.get('main-page');

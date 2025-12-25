@@ -5,8 +5,11 @@ const CONFIG = {
   // API Configuration
   api: {
     get endpoint() {
-      // Always use localhost:3000 for API
-      return 'http://localhost:3000/api';
+      // Use production API on Vercel, localhost for development
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:3000/api';
+      }
+      return '/api';
     }
   },
 
@@ -22,9 +25,14 @@ const CONFIG = {
 
   // App Settings
   app: {
-    name: 'Article Platform',
-    defaultDomain: 'localhost:8080', // Your local dev domain
-    // For production: 'yourdomain.com'
+    name: 'Pluma',
+    get domain() {
+      // Use production domain by default, localhost for development
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'localhost:8080';
+      }
+      return 'pluma.ink';
+    }
   }
 };
 

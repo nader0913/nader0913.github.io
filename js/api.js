@@ -40,8 +40,8 @@ const API = {
       if (CONFIG.storage === 'localStorage') {
         // Mock login for localStorage mode
         const user = { username, token: 'mock_token_' + username };
-        localStorage.setItem('auth_token', user.token);
-        localStorage.setItem('username', username);
+        API.Cookies.set('auth_token', user.token, 7);
+        API.Cookies.set('username', username, 7);
         return { success: true, user };
       }
 
@@ -56,9 +56,11 @@ const API = {
         const data = await response.json();
 
         if (response.ok) {
-          // Save to localStorage
-          localStorage.setItem('auth_token', data.token);
-          localStorage.setItem('username', data.username);
+          // Save to cookies (works across subdomains)
+          const domain = CONFIG.app.domain;
+          const cookieDomain = domain.includes('localhost') ? 'localhost' : `.${domain}`;
+          document.cookie = `auth_token=${data.token};domain=${cookieDomain};path=/;max-age=${7 * 24 * 60 * 60}`;
+          document.cookie = `username=${data.username};domain=${cookieDomain};path=/;max-age=${7 * 24 * 60 * 60}`;
           return { success: true, user: data };
         }
 
@@ -72,8 +74,8 @@ const API = {
       if (CONFIG.storage === 'localStorage') {
         // Mock signup for localStorage mode
         const user = { username, email, token: 'mock_token_' + username };
-        localStorage.setItem('auth_token', user.token);
-        localStorage.setItem('username', username);
+        API.Cookies.set('auth_token', user.token, 7);
+        API.Cookies.set('username', username, 7);
         return { success: true, user };
       }
 
@@ -88,9 +90,11 @@ const API = {
         const data = await response.json();
 
         if (response.ok) {
-          // Save to localStorage
-          localStorage.setItem('auth_token', data.token);
-          localStorage.setItem('username', data.username);
+          // Save to cookies (works across subdomains)
+          const domain = CONFIG.app.domain;
+          const cookieDomain = domain.includes('localhost') ? 'localhost' : `.${domain}`;
+          document.cookie = `auth_token=${data.token};domain=${cookieDomain};path=/;max-age=${7 * 24 * 60 * 60}`;
+          document.cookie = `username=${data.username};domain=${cookieDomain};path=/;max-age=${7 * 24 * 60 * 60}`;
           return { success: true, user: data };
         }
 
@@ -101,21 +105,23 @@ const API = {
     },
 
     logout() {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('username');
+      const domain = CONFIG.app.domain;
+      const cookieDomain = domain.includes('localhost') ? 'localhost' : `.${domain}`;
+      document.cookie = `auth_token=;domain=${cookieDomain};path=/;max-age=0`;
+      document.cookie = `username=;domain=${cookieDomain};path=/;max-age=0`;
       localStorage.clear();
     },
 
     isAuthenticated() {
-      return !!localStorage.getItem('auth_token');
+      return !!API.Cookies.get('auth_token');
     },
 
     getCurrentUser() {
-      return localStorage.getItem('username');
+      return API.Cookies.get('username');
     },
 
     getToken() {
-      return localStorage.getItem('auth_token');
+      return API.Cookies.get('auth_token');
     }
   },
 

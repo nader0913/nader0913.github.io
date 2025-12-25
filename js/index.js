@@ -65,9 +65,10 @@ if (loginForm) {
     const result = await API.Auth.login(username, password);
 
     if (result.success) {
-      // Pass token in URL for cross-subdomain auth
-      const token = API.Auth.getToken();
-      window.location.href = `http://${username}.localhost:8080?token=${encodeURIComponent(token)}&user=${encodeURIComponent(username)}`;
+      // Redirect to user's subdomain (token is in cookies)
+      const protocol = window.location.protocol;
+      const domain = CONFIG.app.domain;
+      window.location.href = `${protocol}//${username}.${domain}`;
     } else {
       UI.showError(UI.loginError, result.error || 'Login failed');
     }
@@ -99,9 +100,10 @@ if (signupForm) {
     const result = await API.Auth.signup(username, password, email);
 
     if (result.success) {
-      // Pass token in URL for cross-subdomain auth
-      const token = API.Auth.getToken();
-      window.location.href = `http://${username}.localhost:8080?token=${encodeURIComponent(token)}&user=${encodeURIComponent(username)}`;
+      // Redirect to user's subdomain (token is in cookies)
+      const protocol = window.location.protocol;
+      const domain = CONFIG.app.domain;
+      window.location.href = `${protocol}//${username}.${domain}`;
     } else {
       UI.showError(UI.signupError, result.error || 'Signup failed');
     }
@@ -120,6 +122,7 @@ async function loadArticles(username) {
 
   // Update title
   document.getElementById('main-title').textContent = username;
+  document.title = `${username} - Pluma`;
 
   // Render articles list
   const mainPage = document.getElementById('main-page');
@@ -176,7 +179,9 @@ async function loadArticles(username) {
       logoutBtn.onclick = () => {
         Auth.logout();
         // Redirect to homepage with logout flag to clear auth there too
-        window.location.replace('http://localhost:8080?logout=1');
+        const protocol = window.location.protocol;
+        const domain = CONFIG.app.domain;
+        window.location.replace(`${protocol}//${domain}?logout=1`);
       };
     }
   }
@@ -189,7 +194,7 @@ function show404Page(title = 'User not found', message = 'The user does not exis
     mainPage.innerHTML = `
       <div style="text-align: center; padding: 4em 2em;">
         <p style="font-size: 1.1em; color: rgba(0,0,0,0.6); margin: 2em 0;">${message}</p>
-        <a href="http://localhost:8080" style="color: #2c5aa0; text-decoration: underline; margin-top: 2em; display: inline-block;">Go to homepage</a>
+        <a href="/" style="color: #2c5aa0; text-decoration: underline; margin-top: 2em; display: inline-block;">Go to homepage</a>
       </div>
     `;
   }
@@ -218,6 +223,7 @@ function showArticle(article) {
   document.getElementById('article-title').textContent = article.title;
   document.getElementById('article-chapter').textContent = article.chapter || '';
   document.getElementById('article-date').textContent = article.date || '';
+  document.title = `${article.title} - Pluma`;
 
   // Render markdown
   const html = toHTMLLine(article.content || article.markdown || '');
@@ -263,17 +269,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Check for auth token in URL (for cross-subdomain login)
-  const tokenFromUrl = urlParams.get('token');
-  const userFromUrl = urlParams.get('user');
-
-  if (tokenFromUrl && userFromUrl) {
-    localStorage.setItem('auth_token', tokenFromUrl);
-    localStorage.setItem('username', userFromUrl);
-    // Clean up URL
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-
   if (subdomain) {
     // On user subdomain - show viewer
     UI.showViewer();
@@ -283,8 +278,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     // If logged in, redirect to user's subdomain
     if (Auth.isAuthenticated()) {
       const username = Auth.getCurrentUser();
-      const token = API.Auth.getToken();
-      window.location.href = `http://${username}.localhost:8080?token=${encodeURIComponent(token)}&user=${encodeURIComponent(username)}`;
+      const protocol = window.location.protocol;
+      const domain = CONFIG.app.domain;
+      window.location.href = `${protocol}//${username}.${domain}`;
     } else {
       // Not logged in - show landing
       UI.showLanding();
