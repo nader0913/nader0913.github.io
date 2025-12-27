@@ -23,7 +23,7 @@ export default {
 
     // Create Pages URL
     const pagesUrl = new URL(request.url);
-    pagesUrl.hostname = 'pluma.pages.dev';
+    pagesUrl.hostname = 'pluma-a6y.pages.dev';
 
     // ROUTING LOGIC
     if (!subdomain) {
