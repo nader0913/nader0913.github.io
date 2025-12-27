@@ -62,9 +62,13 @@ const Auth = {
   /**
    * Logout user
    */
-  logout() {
-    API.Auth.logout();
-    window.location.href = '/';
+  async logout() {
+    await API.Auth.logout();
+    // Always redirect to main domain (not subdomain)
+    // Use location.replace() to force reload and clear cache
+    const protocol = window.location.protocol;
+    const domain = CONFIG.app.defaultDomain;
+    window.location.replace(`${protocol}//${domain}/`);
   }
 };
 

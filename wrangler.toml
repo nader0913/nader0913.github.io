@@ -1,0 +1,15 @@
+name = "pluma"
+compatibility_date = "2024-01-01"
+
+# Pages configuration
+pages_build_output_dir = "."
+
+# D1 Database binding
+[[d1_databases]]
+binding = "pluma_db"
+database_name = "pluma-db"
+database_id = "5e5531c2-fd28-429c-bc5e-ac0cfb3b61aa"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "production"

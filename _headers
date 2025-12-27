@@ -1,0 +1,10 @@
+# Disable cache for HTML files to prevent stale content
+/*.html
+  Cache-Control: no-cache
+
+# Cache static assets
+/css/*
+  Cache-Control: public, max-age=31536000
+
+/js/*
+  Cache-Control: public, max-age=31536000

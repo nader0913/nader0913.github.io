@@ -7,15 +7,31 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
-  background: #ffffff;
-  color: #000000;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  margin: 0;
-  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  min-width: 320px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: normal !important;
+  text-align: left !important;
+  hyphens: none !important;
+}
+
+header {
+  padding: 2rem 2rem 0 2rem !important;
+  text-align: center !important;
+}
+
+.logo {
+  font-family: "EB Garamond", serif !important;
+  font-size: 2rem !important;
+  color: rgb(0,0,0,0.87) !important;
+  font-weight: bold !important;
 }
 
 .hero {
@@ -28,7 +44,8 @@ body {
 }
 
 .hero-content {
-  max-width: 800px;
+  width: 750px;
+  max-width: 100%;
 }
 
 .hero h1 {
@@ -65,6 +82,7 @@ body {
   transition: all 0.2s;
   text-decoration: none;
   display: inline-block;
+  min-width: 150px;
 }
 
 .btn:hover {
@@ -84,7 +102,7 @@ body {
 
 .features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
   margin-top: 4rem;
   padding-top: 4rem;
@@ -108,149 +126,212 @@ body {
 }
 
 footer {
-  padding: 2rem;
   text-align: center;
-  font-size: 0.875rem;
-  color: #666666;
-  border-top: 1px solid #e0e0e0;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  font-family: "EB Garamond", serif;
+  color: rgb(0,0,0,0.87);
 }
 
 footer a {
-  color: #000000;
-  text-decoration: none;
-}
-
-footer a:hover {
+  color: #2c5aa0;
   text-decoration: underline;
 }
 
-/* Auth Modal */
-.auth-modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+footer a:hover {
+  color: #1a4480;
+}
+
+/* Auth Page */
+.auth-page {
+  flex: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
+  padding: 2rem;
 }
 
-.auth-modal.active {
-  display: flex;
+.auth-page .auth-container {
+  width: 600px;
+  max-width: 100%;
 }
 
-.auth-modal .auth-container {
-  background: #ffffff;
-  padding: 3rem;
-  max-width: 400px;
-  width: 90%;
-  position: relative;
-  margin: 0;
+.auth-page .auth-tabs {
+  display: flex !important;
+  gap: 20px !important;
+  justify-content: center !important;
+  margin-bottom: 30px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
 }
 
-.close-modal {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #666666;
-  font-family: Arial, sans-serif;
+.auth-page .auth-tab {
+  background: none !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif !important;
+  font-size: 1.1em !important;
+  cursor: pointer !important;
+  color: rgba(0, 0, 0, 0.6) !important;
+  border-bottom: 2px solid transparent !important;
+  transition: all 0.2s !important;
 }
 
-.close-modal:hover {
-  color: #000000;
+.auth-page .auth-tab:hover {
+  color: rgba(0, 0, 0, 0.87) !important;
 }
 
-.auth-modal .auth-container h2 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-  border: none;
-  text-align: center;
+.auth-page .auth-tab.active {
+  color: rgba(0, 0, 0, 0.87) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.87) !important;
 }
 
-.auth-modal .auth-container .subtitle {
-  color: #666666;
-  margin-bottom: 2rem;
-  text-align: center;
+.auth-page .auth-form {
+  display: none !important;
 }
 
-.auth-modal .auth-tabs {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid #e0e0e0;
-  justify-content: flex-start;
+.auth-page .auth-form.active {
+  display: block !important;
 }
 
-.auth-modal .auth-tab {
-  background: none;
-  border: none;
-  padding: 0.75rem 0;
-  font-size: 1rem;
-  cursor: pointer;
-  color: #666666;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
+.auth-page .form-group {
+  margin-bottom: 1.5rem !important;
+  text-align: left !important;
 }
 
-.auth-modal .auth-tab.active {
-  color: #000000;
-  border-bottom-color: #000000;
+.auth-page .form-group label {
+  display: block !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: #000000 !important;
 }
 
-.auth-modal .form-group {
-  margin-bottom: 1.5rem;
-  text-align: left;
+.auth-page .form-group input {
+  width: 100% !important;
+  padding: 0.75rem !important;
+  border: 1px solid #e0e0e0 !important;
+  font-size: 1rem !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif !important;
+  transition: border-color 0.2s !important;
 }
 
-.auth-modal .form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+.auth-page .form-group input:focus {
+  outline: none !important;
+  border-color: #000000 !important;
 }
 
-.auth-modal .form-group input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #e0e0e0;
-  font-size: 1rem;
-  font-family: inherit;
+.auth-page .auth-button {
+  width: 100% !important;
+  padding: 1rem !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #000000 !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif !important;
 }
 
-.auth-modal .form-group input:focus {
-  outline: none;
-  border-color: #000000;
+.auth-page .auth-button:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
 }
 
-.auth-modal .auth-button {
-  width: 100%;
-  padding: 1rem;
-  background: #000000;
-  color: #ffffff;
-  border: none;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif;
+.auth-page .info-text {
+  margin-top: 1.5rem !important;
+  font-size: 0.875rem !important;
+  color: #666666 !important;
+  text-align: center !important;
+  line-height: 1.6 !important;
 }
 
-.auth-modal .auth-button:hover {
-  background: #333333;
+.auth-page .error-message {
+  color: #d32f2f !important;
+  font-size: 0.9em !important;
+  margin-top: 10px !important;
+  display: none !important;
 }
 
-.auth-modal .info-text {
-  margin-top: 1.5rem;
-  font-size: 0.875rem;
-  color: #666666;
-  text-align: center;
-  line-height: 1.6;
+.auth-page .error-message.show {
+  display: block !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  header {
+    padding: 1.5rem 1rem 0 1rem;
+  }
+
+  .logo {
+    font-size: 1.5rem;
+  }
+
+  .hero {
+    padding: 1rem;
+  }
+
+  .hero h1 {
+    font-size: 3rem;
+  }
+
+  .hero p {
+    font-size: 1.125rem;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .btn {
+    padding: 0.875rem 2rem;
+  }
+
+  footer {
+    padding: 0 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  header {
+    padding: 1rem 0.5rem 0 0.5rem;
+  }
+
+  .logo {
+    font-size: 1.25rem;
+  }
+
+  .hero {
+    padding: 0.5rem;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .hero p {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .features {
+    margin-top: 3rem;
+    padding-top: 3rem;
+  }
+
+  .auth-modal .auth-container {
+    padding: 2rem 1.5rem;
+  }
 }

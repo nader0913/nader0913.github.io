@@ -1,0 +1,9 @@
+name = "pluma-router"
+main = "pluma-router-worker.js"
+compatibility_date = "2024-01-01"
+
+# Routes for wildcard subdomain
+routes = [
+  { pattern = "*.pluma.ink/*", zone_name = "pluma.ink" },
+  { pattern = "pluma.ink/*", zone_name = "pluma.ink" }
+]

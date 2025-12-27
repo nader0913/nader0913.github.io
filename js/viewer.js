@@ -168,11 +168,24 @@ window.addEventListener('hashchange', () => {
 
 // ===== LOAD ARTICLES FROM API =====
 async function loadArticles() {
+  // Check for username param in URL (from login redirect)
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user');
+
+  if (username) {
+    // Save username to localStorage
+    localStorage.setItem('username', username);
+    console.log('Username received from URL and saved to localStorage');
+    // Clean URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
   // Get username from subdomain
   currentUsername = SubdomainUtils.getUsername();
 
   console.log('Current username from subdomain:', currentUsername);
   console.log('Current hostname:', window.location.hostname);
+  console.log('Authenticated as:', localStorage.getItem('username'));
 
   if (!currentUsername) {
     // No subdomain, don't load articles
@@ -218,13 +231,25 @@ async function loadArticles() {
     Router.handleHashRoute();
   }
 
-  // Show builder button if user owns this subdomain
+  // Show builder and logout buttons if user owns this subdomain
   if (Auth.isAuthenticated() && Auth.getCurrentUser() === currentUsername) {
     const builderBtn = DOM.get('builder-mode-btn');
     if (builderBtn) {
       builderBtn.style.display = 'inline-block';
       builderBtn.addEventListener('click', () => {
         window.location.href = '/builder.html';
+      });
+    }
+
+    const logoutBtn = DOM.get('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.style.display = 'inline-block';
+      logoutBtn.addEventListener('click', async () => {
+        await Auth.logout();
+        // Redirect to main domain
+        const protocol = window.location.protocol;
+        const domain = CONFIG.app.domain;
+        window.location.href = `${protocol}//${domain}/`;
       });
     }
   }

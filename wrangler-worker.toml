@@ -1,0 +1,14 @@
+name = "pluma-router"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Routes
+routes = [
+  { pattern = "*.pluma.ink/*", zone_name = "pluma.ink" }
+]
+
+# D1 Database binding (same as Pages)
+[[d1_databases]]
+binding = "pluma_db"
+database_name = "pluma-db"
+database_id = "5e5531c2-fd28-429c-bc5e-ac0cfb3b61aa"

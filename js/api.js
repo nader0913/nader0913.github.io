@@ -8,40 +8,25 @@ const API = {
     CURRENT_USER: 'current_user'
   },
 
-  // ===== COOKIE UTILITIES =====
-  Cookies: {
-    set(name, value, days = 7) {
-      const expires = new Date();
-      expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-      document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
-    },
-
-    get(name) {
-      const nameEQ = name + '=';
-      const ca = document.cookie.split(';');
-      for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1);
-        if (c.indexOf(nameEQ) === 0) {
-          return c.substring(nameEQ.length);
-        }
+  // ===== AUTHENTICATION =====
+  Auth: {
+    /**
+     * Read username from cookie (set by server)
+     */
+    _getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) {
+        return parts.pop().split(';').shift();
       }
       return null;
     },
 
-    delete(name) {
-      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
-    }
-  },
-
-  // ===== AUTHENTICATION =====
-  Auth: {
     async login(username, password) {
       if (CONFIG.storage === 'localStorage') {
         // Mock login for localStorage mode
-        const user = { username, token: 'mock_token_' + username };
-        API.Cookies.set('auth_token', user.token, 7);
-        API.Cookies.set('username', username, 7);
+        const user = { username };
+        localStorage.setItem('username', username);
         return { success: true, user };
       }
 
@@ -50,17 +35,14 @@ const API = {
         const response = await fetch(`${CONFIG.api.endpoint}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // Include cookies
           body: JSON.stringify({ username, password })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          // Save to cookies (works across subdomains)
-          const domain = CONFIG.app.domain;
-          const cookieDomain = domain.includes('localhost') ? 'localhost' : `.${domain}`;
-          document.cookie = `auth_token=${data.token};domain=${cookieDomain};path=/;max-age=${7 * 24 * 60 * 60}`;
-          document.cookie = `username=${data.username};domain=${cookieDomain};path=/;max-age=${7 * 24 * 60 * 60}`;
+          // Cookie is automatically set by server
           return { success: true, user: data };
         }
 
@@ -73,9 +55,8 @@ const API = {
     async signup(username, password, email) {
       if (CONFIG.storage === 'localStorage') {
         // Mock signup for localStorage mode
-        const user = { username, email, token: 'mock_token_' + username };
-        API.Cookies.set('auth_token', user.token, 7);
-        API.Cookies.set('username', username, 7);
+        const user = { username, email };
+        localStorage.setItem('username', username);
         return { success: true, user };
       }
 
@@ -84,17 +65,14 @@ const API = {
         const response = await fetch(`${CONFIG.api.endpoint}/auth/signup`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // Include cookies
           body: JSON.stringify({ username, password, email })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          // Save to cookies (works across subdomains)
-          const domain = CONFIG.app.domain;
-          const cookieDomain = domain.includes('localhost') ? 'localhost' : `.${domain}`;
-          document.cookie = `auth_token=${data.token};domain=${cookieDomain};path=/;max-age=${7 * 24 * 60 * 60}`;
-          document.cookie = `username=${data.username};domain=${cookieDomain};path=/;max-age=${7 * 24 * 60 * 60}`;
+          // Cookie is automatically set by server
           return { success: true, user: data };
         }
 
@@ -104,24 +82,41 @@ const API = {
       }
     },
 
-    logout() {
-      const domain = CONFIG.app.domain;
-      const cookieDomain = domain.includes('localhost') ? 'localhost' : `.${domain}`;
-      document.cookie = `auth_token=;domain=${cookieDomain};path=/;max-age=0`;
-      document.cookie = `username=;domain=${cookieDomain};path=/;max-age=0`;
+    async logout() {
+      if (CONFIG.storage === 'localStorage') {
+        // LocalStorage mode - just clear storage
+        localStorage.clear();
+        sessionStorage.clear();
+        return;
+      }
+
+      // Server mode - call logout API to clear cookies
+      try {
+        await fetch(`${CONFIG.api.endpoint}/auth/logout`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+      } catch (error) {
+        console.error('Logout API call failed:', error);
+      }
+
+      // Clear localStorage (for localStorage mode compatibility)
       localStorage.clear();
+      sessionStorage.clear();
     },
 
     isAuthenticated() {
-      return !!API.Cookies.get('auth_token');
+      // Check if username cookie exists
+      const username = this.getCurrentUser();
+      return !!username;
     },
 
     getCurrentUser() {
-      return API.Cookies.get('username');
-    },
-
-    getToken() {
-      return API.Cookies.get('auth_token');
+      // Read directly from cookie - no API call!
+      if (CONFIG.storage === 'localStorage') {
+        return localStorage.getItem('username');
+      }
+      return this._getCookie('username');
     }
   },
 
@@ -148,9 +143,7 @@ const API = {
       // Server mode
       try {
         const response = await fetch(`${CONFIG.api.endpoint}/articles/${user}`, {
-          headers: {
-            'Authorization': `Bearer ${API.Auth.getToken()}`
-          }
+          credentials: 'include'
         });
 
         console.log('API Response status:', response.status);
@@ -203,9 +196,9 @@ const API = {
       try {
         const response = await fetch(`${CONFIG.api.endpoint}/articles/${user}`, {
           method: 'POST',
+          credentials: 'include',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API.Auth.getToken()}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify(article)
         });
@@ -245,9 +238,7 @@ const API = {
       try {
         const response = await fetch(`${CONFIG.api.endpoint}/articles/${user}/${articleId}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${API.Auth.getToken()}`
-          }
+          credentials: 'include'
         });
 
         if (response.ok) {

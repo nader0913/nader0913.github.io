@@ -66,6 +66,14 @@
       Copyright 2025 — Contact: <a href="mailto:nader.business.mail@gmail.com">nader.business.mail@gmail.com</a>
     </footer>
 
+    <script>
+      // Require authentication and ownership
+      window.addEventListener('DOMContentLoaded', () => {
+        if (typeof Auth !== 'undefined' && Auth.requireOwnership) {
+          Auth.requireOwnership();
+        }
+      });
+    </script>
     <script src="js/markdown-converter.js"></script>
     <script src="js/builder.js"></script>
 </body>
