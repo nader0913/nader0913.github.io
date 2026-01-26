@@ -1,0 +1,65 @@
+[
+  {
+    "id": "plain-english",
+    "title": "Writing in Plain English",
+    "slug": "plain-english",
+    "file": "plain-english.md",
+    "chapter": "Writing",
+    "date": "December 19, 2024",
+    "published": true
+  },
+  {
+    "id": "baader-meinhof-phenomenon",
+    "title": "Baader-Meinhof Phenomenon",
+    "slug": "baader-meinhof-phenomenon",
+    "file": "baader-meinhof-phenomenon.md",
+    "chapter": "Psychology",
+    "date": "December 18, 2024",
+    "published": true
+  },
+  {
+    "id": "goldilocks-rule-and-flow-state",
+    "title": "The Goldilocks Rule and Flow State",
+    "slug": "goldilocks-rule-and-flow-state",
+    "file": "goldilocks-rule-and-flow-state.md",
+    "chapter": "Psychology",
+    "date": "December 17, 2024",
+    "published": true
+  },
+  {
+    "id": "pareto-distribution",
+    "title": "Pareto Distribution",
+    "slug": "pareto-distribution",
+    "file": "pareto-distribution.md",
+    "chapter": "Mathematics",
+    "date": "December 16, 2024",
+    "published": true
+  },
+  {
+    "id": "homomorphic-encryption",
+    "title": "Homomorphic Encryption",
+    "slug": "homomorphic-encryption",
+    "file": "homomorphic-encryption.md",
+    "chapter": "Cryptography",
+    "date": "December 15, 2024",
+    "published": true
+  },
+  {
+    "id": "shamir-secret-sharing",
+    "title": "Shamir's Secret Sharing",
+    "slug": "shamir-secret-sharing",
+    "file": "shamir-secret-sharing.md",
+    "chapter": "Cryptography",
+    "date": "December 14, 2024",
+    "published": true
+  },
+  {
+    "id": "veilcomm",
+    "title": "VeilComm: Undetectable Communication",
+    "slug": "veilcomm",
+    "file": "veilcomm.md",
+    "chapter": "Cryptography",
+    "date": "December 13, 2024",
+    "published": true
+  }
+]

@@ -1,142 +1,37 @@
-// ===== INDEX PAGE ROUTER & AUTH =====
+// Simple static blog - loads articles from articles.json
 
-const UI = {
-  landingContent: document.getElementById('landing-content'),
-  viewerContent: document.getElementById('viewer-content'),
-  loginForm: document.getElementById('login-form'),
-  signupForm: document.getElementById('signup-form'),
-  loginError: document.getElementById('login-error'),
-  signupError: document.getElementById('signup-error'),
+let articlesData = [];
+let publishedArticles = [];
+let currentArticleIndex = -1;
 
-  showError(element, message) {
-    if (!element) return;
-    element.textContent = message;
-    element.classList.add('show');
-  },
+// Load and display articles
+async function loadArticles() {
+  try {
+    const response = await fetch('articles.json');
+    articlesData = await response.json();
 
-  hideError(element) {
-    if (!element) return;
-    element.classList.remove('show');
-  },
+    // Filter published articles and sort by date
+    publishedArticles = articlesData
+      .filter(article => article.published !== false)
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  showLanding() {
-    this.landingContent.style.display = 'block';
-    this.viewerContent.style.display = 'none';
-  },
-
-  showViewer() {
-    this.landingContent.style.display = 'none';
-    this.viewerContent.style.display = 'block';
+    displayArticleList(publishedArticles);
+  } catch (error) {
+    console.error('Error loading articles:', error);
+    document.getElementById('main-page').innerHTML = '<p>Error loading articles</p>';
   }
-};
-
-// ===== TAB SWITCHING =====
-document.querySelectorAll('.auth-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    const targetTab = tab.dataset.tab;
-
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-
-    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-    document.getElementById(`${targetTab}-form`).classList.add('active');
-
-    UI.hideError(UI.loginError);
-    UI.hideError(UI.signupError);
-  });
-});
-
-// ===== LOGIN HANDLER =====
-const loginForm = document.getElementById('login-form');
-if (loginForm) {
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const username = document.getElementById('login-username').value.trim();
-    const password = document.getElementById('login-password').value;
-
-    UI.hideError(UI.loginError);
-
-    if (!username || !password) {
-      UI.showError(UI.loginError, 'Please fill in all fields');
-      return;
-    }
-
-    const result = await API.Auth.login(username, password);
-
-    if (result.success) {
-      // Redirect to user's subdomain (token is in cookies)
-      const protocol = window.location.protocol;
-      const domain = CONFIG.app.domain;
-      window.location.href = `${protocol}//${username}.${domain}`;
-    } else {
-      UI.showError(UI.loginError, result.error || 'Login failed');
-    }
-  });
 }
 
-// ===== SIGNUP HANDLER =====
-const signupForm = document.getElementById('signup-form');
-if (signupForm) {
-  signupForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const username = document.getElementById('signup-username').value.trim();
-    const email = document.getElementById('signup-email').value.trim();
-    const password = document.getElementById('signup-password').value;
-
-    UI.hideError(UI.signupError);
-
-    if (!username || !email || !password) {
-      UI.showError(UI.signupError, 'Please fill in all fields');
-      return;
-    }
-
-    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-      UI.showError(UI.signupError, 'Username can only contain letters, numbers, underscores, and hyphens');
-      return;
-    }
-
-    const result = await API.Auth.signup(username, password, email);
-
-    if (result.success) {
-      // Redirect to user's subdomain (token is in cookies)
-      const protocol = window.location.protocol;
-      const domain = CONFIG.app.domain;
-      window.location.href = `${protocol}//${username}.${domain}`;
-    } else {
-      UI.showError(UI.signupError, result.error || 'Signup failed');
-    }
-  });
-}
-
-// ===== LOAD ARTICLES =====
-async function loadArticles(username) {
-  const articles = await API.Articles.getAll(username);
-
-  // Check if user exists (articles will be null for 404)
-  if (articles === null) {
-    show404Page('User not found', `The user "${username}" does not exist.`);
-    return;
-  }
-
-  // Update title
-  document.getElementById('main-title').textContent = username;
-  document.title = `${username} - Pluma`;
-
-  // Render articles list
+// Display article list
+function displayArticleList(articles) {
   const mainPage = document.getElementById('main-page');
   mainPage.innerHTML = '';
 
-  // Filter to show only published articles
-  const publishedArticles = articles.filter(article => article.published !== false);
-
-  publishedArticles.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(article => {
+  articles.forEach(article => {
     const link = document.createElement('a');
     link.className = 'toc-entry';
-    link.href = `#${article.slug || article.id}`;
+    link.href = `#${article.slug}`;
 
-    // Add click handler to show article
     link.addEventListener('click', (e) => {
       e.preventDefault();
       showArticle(article);
@@ -149,141 +44,119 @@ async function loadArticles(username) {
     const meta = document.createElement('div');
     meta.className = 'toc-meta';
 
-    const tags = document.createElement('span');
-    tags.className = 'toc-chapter';
-    tags.textContent = article.chapter || '';
+    const chapter = document.createElement('span');
+    chapter.className = 'toc-chapter';
+    chapter.textContent = article.chapter || '';
 
     const date = document.createElement('span');
     date.className = 'toc-date';
     date.textContent = article.date || '';
 
-    meta.append(tags, date);
+    meta.append(chapter, date);
     link.append(title, meta);
     mainPage.appendChild(link);
   });
-
-  // Show builder and logout buttons if user owns this subdomain
-  const builderBtn = document.getElementById('builder-mode-btn');
-  const logoutBtn = document.getElementById('logout-btn');
-
-  if (Auth.isAuthenticated() && Auth.getCurrentUser() === username) {
-    if (builderBtn) {
-      builderBtn.style.display = 'inline-block';
-      builderBtn.onclick = () => {
-        window.location.href = '/builder.html';
-      };
-    }
-
-    if (logoutBtn) {
-      logoutBtn.style.display = 'inline-block';
-      logoutBtn.onclick = () => {
-        Auth.logout();
-        // Redirect to homepage with logout flag to clear auth there too
-        const protocol = window.location.protocol;
-        const domain = CONFIG.app.domain;
-        window.location.replace(`${protocol}//${domain}?logout=1`);
-      };
-    }
-  }
 }
 
-// ===== 404 PAGE =====
-function show404Page(title = 'User not found', message = 'The user does not exist.') {
-  const mainPage = document.getElementById('main-page');
-  if (mainPage) {
-    mainPage.innerHTML = `
-      <div style="text-align: center; padding: 4em 2em;">
-        <p style="font-size: 1.1em; color: rgba(0,0,0,0.6); margin: 2em 0;">${message}</p>
-        <a href="/" style="color: #2c5aa0; text-decoration: underline; margin-top: 2em; display: inline-block;">Go to homepage</a>
-      </div>
-    `;
-  }
-  const mainTitle = document.getElementById('main-title');
-  if (mainTitle) {
-    mainTitle.textContent = '404 - Not Found';
-  }
-
-  // Hide builder and logout buttons
-  const builderBtn = document.getElementById('builder-mode-btn');
-  const logoutBtn = document.getElementById('logout-btn');
-  if (builderBtn) builderBtn.style.display = 'none';
-  if (logoutBtn) logoutBtn.style.display = 'none';
-}
-
-// ===== ARTICLE VIEWING =====
-function showArticle(article) {
+// Show article
+async function showArticle(article) {
   const listView = document.getElementById('list-view');
   const articleView = document.getElementById('article-view');
 
-  // Hide article list, show clean article view
+  // Find current article index
+  currentArticleIndex = publishedArticles.findIndex(a => a.id === article.id);
+
+  // Hide list, show article
   listView.style.display = 'none';
   articleView.style.display = 'block';
 
-  // Set article content
+  // Set article metadata
   document.getElementById('article-title').textContent = article.title;
   document.getElementById('article-chapter').textContent = article.chapter || '';
   document.getElementById('article-date').textContent = article.date || '';
-  document.title = `${article.title} - Pluma`;
+  document.title = `${article.title} - nader0913`;
 
-  // Render markdown
-  const html = toHTMLLine(article.content || article.markdown || '');
-  document.getElementById('markdown-output').innerHTML = html;
+  // Update navigation button states
+  updateNavigationButtons();
 
-  // Scroll to top
-  window.scrollTo(0, 0);
+  // Load and render markdown
+  try {
+    const response = await fetch(`articles/${article.file}`);
+    const markdown = await response.text();
+    const html = toHTMLLine(markdown);
+    document.getElementById('markdown-output').innerHTML = html;
 
-  // Apply syntax highlighting
-  if (window.Prism) {
-    Prism.highlightAll();
-  }
+    // Scroll to top
+    window.scrollTo(0, 0);
 
-  // Render math
-  if (window.MathJax && window.MathJax.typesetPromise) {
-    MathJax.typesetPromise();
+    // Apply syntax highlighting
+    if (window.Prism) {
+      Prism.highlightAll();
+    }
+
+    // Render math
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      MathJax.typesetPromise();
+    }
+  } catch (error) {
+    console.error('Error loading article:', error);
+    document.getElementById('markdown-output').innerHTML = '<p>Error loading article content</p>';
   }
 }
 
+// Hide article and return to list
 function hideArticle() {
   const listView = document.getElementById('list-view');
   const articleView = document.getElementById('article-view');
 
-  // Show article list, hide article view
   listView.style.display = 'block';
   articleView.style.display = 'none';
 
-  // Scroll to top
+  document.title = 'nader0913';
   window.scrollTo(0, 0);
 }
 
-// ===== ROUTER =====
-window.addEventListener('DOMContentLoaded', async () => {
-  const subdomain = SubdomainUtils.getUsername();
-  const urlParams = new URLSearchParams(window.location.search);
-
-  // Handle logout request
-  if (urlParams.get('logout') === '1') {
-    Auth.logout();
-    // Clean up URL and show landing
-    window.history.replaceState({}, document.title, window.location.pathname);
-    UI.showLanding();
-    return;
+// Navigate to previous article
+function prevArticle() {
+  if (currentArticleIndex > 0) {
+    showArticle(publishedArticles[currentArticleIndex - 1]);
   }
+}
 
-  if (subdomain) {
-    // On user subdomain - show viewer
-    UI.showViewer();
-    await loadArticles(subdomain);
-  } else {
-    // On main domain
-    // If logged in, redirect to user's subdomain
-    if (Auth.isAuthenticated()) {
-      const username = Auth.getCurrentUser();
-      const protocol = window.location.protocol;
-      const domain = CONFIG.app.domain;
-      window.location.href = `${protocol}//${username}.${domain}`;
+// Navigate to next article
+function nextArticle() {
+  if (currentArticleIndex < publishedArticles.length - 1) {
+    showArticle(publishedArticles[currentArticleIndex + 1]);
+  }
+}
+
+// Update navigation button states
+function updateNavigationButtons() {
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+
+  if (prevBtn) {
+    if (currentArticleIndex <= 0) {
+      prevBtn.style.opacity = '0.3';
+      prevBtn.style.pointerEvents = 'none';
     } else {
-      // Not logged in - show landing
-      UI.showLanding();
+      prevBtn.style.opacity = '1';
+      prevBtn.style.pointerEvents = 'auto';
     }
   }
+
+  if (nextBtn) {
+    if (currentArticleIndex >= publishedArticles.length - 1) {
+      nextBtn.style.opacity = '0.3';
+      nextBtn.style.pointerEvents = 'none';
+    } else {
+      nextBtn.style.opacity = '1';
+      nextBtn.style.pointerEvents = 'auto';
+    }
+  }
+}
+
+// Initialize on page load
+window.addEventListener('DOMContentLoaded', () => {
+  loadArticles();
 });
